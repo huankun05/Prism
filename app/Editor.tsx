@@ -91,6 +91,8 @@ import { LangMenu } from "@/components/Menus";
 import { AiActionKey, AiPanel, aiErrorText } from "@/components/AiPanel";
 import { AiStudio } from "@/components/AiStudio";
 import { PersonalStylePanel } from "@/components/PersonalStylePanel";
+import { IconBrowser } from "@/components/IconBrowser";
+import { DESIGN_PACKS, PackId, exportTokenCss, packById, packPalette, packTheme } from "@/lib/packs";
 import type { PersonalStyle } from "@/lib/personalStyle";
 import { STYLE_PRESETS, ideaWithStyle } from "@/lib/styles";
 import type { StylePreset } from "@/lib/styles";
@@ -470,6 +472,9 @@ export default function Editor({
   const tidyRef = useRef<{ frameId: string; before: Group[]; after: Group[] } | null>(null);
   const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI);
   const [aiStyleId, setAiStyleId] = useState("clean");
+  const [designPack, setDesignPack] = useState<PackId>("material");
+  const designPackRef = useRef<PackId>("material");
+  designPackRef.current = designPack;
   const [aiBusy, setAiBusy] = useState(false);
   /** the screen the model is working on, which wears the animated ring meanwhile */
   const [aiFrameId, setAiFrameId] = useState<string | null>(null);
@@ -2277,7 +2282,8 @@ export default function Editor({
             : device === "both"
               ? "\nTarget: phone 412×892 AND desktop 1280×800 for the same product pages (same frame names). Phone: bottomNav. Desktop: navRail. Shared palette/theme only once at Doc top."
               : "\nTarget: phone screens 412×892 with bottomNav.";
-      const prompt = (styleId ? ideaWithStyle(idea, styleId) : idea) + deviceHint;
+      const packHint = `\nDesign system: ${packById(designPackRef.current).promptHint}`;
+      const prompt = (styleId ? ideaWithStyle(idea, styleId) : idea) + deviceHint + packHint;
       const next = await draftDesign(aiSettings, guideRef.current, prompt, lang);
       if (styleId) {
         const st = STYLE_PRESETS.find((x) => x.id === styleId);
@@ -3572,17 +3578,87 @@ export default function Editor({
                     onPartPointerDown={onPartPointerDown}
                   />
                 ) : leftTab === "color" ? (
-                  <ColorPanel
-                    p={p}
-                    paletteKey={paletteKey}
-                    onPalette={setPaletteKey}
-                    custom={customPalette}
-                    onCustom={setCustomPalette}
-                    dynamic={dynamicColor}
-                    onDynamic={setDynamicColor}
-                    theme={theme}
-                    onTheme={patchTheme}
-                  />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, opacity: 0.8 }}>
+                        {lang === "zh" ? "设计系统 Pack" : "Design pack"}
+                      </div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {DESIGN_PACKS.map((pack) => (
+                          <button
+                            key={pack.id}
+                            type="button"
+                            onClick={() => {
+                              setDesignPack(pack.id);
+                              setPaletteKey(packPalette(pack));
+                              patchTheme(packTheme(pack, theme));
+                              showToast(lang === "zh" ? `已切换 ${pack.label}` : `Switched to ${pack.label}`, 1600, "widgets");
+                            }}
+                            style={{
+                              flex: 1,
+                              border: designPack === pack.id ? `2px solid ${p.primary}` : `1px solid ${p.outlineVariant}`,
+                              borderRadius: 12,
+                              padding: "8px 6px",
+                              background: designPack === pack.id ? p.secondaryContainer : p.surfaceContainerLow,
+                              color: designPack === pack.id ? p.onSecondaryContainer : p.onSurfaceVariant,
+                              cursor: "pointer",
+                              fontSize: 11,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {pack.label}
+                            <div style={{ fontWeight: 400, fontSize: 10, opacity: 0.75 }}>{pack.blurb}</div>
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const css = exportTokenCss(p, designPack);
+                          const blob = new Blob([css], { type: "text/css" });
+                          const a = document.createElement("a");
+                          a.href = URL.createObjectURL(blob);
+                          a.download = `prism-tokens-${designPack}.css`;
+                          a.click();
+                          setTimeout(() => URL.revokeObjectURL(a.href), 0);
+                          showToast(lang === "zh" ? "已导出 Token CSS" : "Tokens CSS exported", 1600, "download");
+                        }}
+                        style={{
+                          marginTop: 8,
+                          width: "100%",
+                          border: `1px solid ${p.outlineVariant}`,
+                          background: "transparent",
+                          color: p.onSurfaceVariant,
+                          borderRadius: 10,
+                          padding: "6px 10px",
+                          fontSize: 11,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {lang === "zh" ? "导出设计 Token（CSS）" : "Export design tokens (CSS)"}
+                      </button>
+                    </div>
+                    <ColorPanel
+                      p={p}
+                      paletteKey={paletteKey}
+                      onPalette={setPaletteKey}
+                      custom={customPalette}
+                      onCustom={setCustomPalette}
+                      dynamic={dynamicColor}
+                      onDynamic={setDynamicColor}
+                      theme={theme}
+                      onTheme={patchTheme}
+                    />
+                    {primaryId && (
+                      <IconBrowser
+                        p={p}
+                        onPick={(key) => {
+                          patchSelected({ icon: key });
+                          showToast(lang === "zh" ? `图标已设为 ${key}` : `Icon → ${key}`, 1400, "emoji_symbols");
+                        }}
+                      />
+                    )}
+                  </div>
                 ) : leftTab === "shape" ? (
                   <ShapePanel p={p} theme={theme} onChange={patchTheme} />
                 ) : leftTab === "type" ? (

@@ -39,10 +39,13 @@ npm run build      # 静态导出到 ./out
 
 静态站点部署。若放在 GitHub Pages 项目站点，请在构建时设置 `NEXT_PUBLIC_BASE_PATH=/Prism`。`.github/workflows/deploy.yml` 会在推送到 `main` 时自动完成。
 
-## 工程规范
+## 文档与工程
 
-功能变更必须走：**方案 → 实现 → 自检 → 测试 → 文档 → 提交**。  
-详见 [docs/工程规范.md](docs/工程规范.md)。进度见 [docs/PROGRESS.md](docs/PROGRESS.md)。
+- **文档索引：** [docs/README.md](docs/README.md)  
+- **进度 / 下一步：** [docs/PROGRESS.md](docs/PROGRESS.md) · [docs/方案-下一阶段.md](docs/方案-下一阶段.md)  
+- **流程：** 方案 → 实现 → 自检 → 测试 → 文档 → 提交（[docs/工程规范.md](docs/工程规范.md)）  
+- **设计系统：** [public/design-system.md](public/design-system.md)  
+- **Bridge / MCP：** [prism-bridge/README.md](prism-bridge/README.md)  
 
 ## 路线（摘要）
 

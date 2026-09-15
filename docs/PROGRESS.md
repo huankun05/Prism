@@ -2,71 +2,58 @@
 
 > 仓库：https://github.com/huankun05/Prism.git  
 > 基座：m3e-canvas（MIT © lnkiai）  
-> 更新规则：每次功能提交后更新本表。
+> **文档入口：** [docs/README.md](./README.md)  
+> 更新规则：每次功能提交后更新本表；方案见 `docs/方案-下一阶段.md`。
 
 ## 当前状态
 
 | 项 | 值 |
 |----|-----|
-| 阶段 | **阶段 2 已实现（提交中）** |
-| 阶段 0 | **已完成** |
-| 阶段 1 本地项目库 | **已完成** |
-| 阶段 2 MCP 桥 | **已实现**：本地 WS Bridge + 画布实时应用 + MCP 工具 + demo 脚本 |
-| 阶段 3 个人样式 | 未开始 |
-| 阶段 4 资源库 | 未开始 |
-| 阶段 5 Pack | 未开始 |
-| 阶段 6–8 | 冻结 |
+| 总览 | **阶段 0–2 已交付；阶段 2.1 待确认** |
+| 阶段 0 底座 | 已完成 · Prism 品牌 · 默认中文 |
+| 阶段 1 本地项目库 | 已完成 · 工作区文件夹 + 自动保存 + 降级 |
+| 阶段 2 Bridge/MCP | 已完成 · 实时改画布 · 画内 AI 工作台 · 设计系统 v0.2 |
+| **阶段 2.1** | **方案已写，待「按推荐做」**：视觉打磨 + 平板 Frame |
+| 阶段 3 个人样式 | 未开始（D6 已定方向） |
+| 阶段 4–8 | 冻结（资源库 / Pack / 同步 / 壳） |
 
-## 阶段 1 已交付
+## 已交付能力（摘要）
 
-- [x] 方案（调研修订）：`docs/方案-阶段1-本地项目库.md`、`docs/调研-本地项目库.md`
-- [x] `lib/storage/*`：types / detect / handleCache / workspace / fallback / migrate
-- [x] 项目库 UI：`components/ProjectLibrary.tsx`
-- [x] `page.tsx`：库 ↔ 画布会话
-- [x] Editor：`initialDoc` / `persistDoc` 自动保存（500ms 防抖）+ 返回项目库 + 保存状态
-- [x] 单测：storage types + fallback 共 13 例；全库 **677** 绿
-- [x] typecheck + build 通过
-
-### 行为摘要
-
-| 能力 | 行为 |
-|------|------|
-| Chromium | 选工作区文件夹；子文件夹=项目；`design.json` + `meta.json` |
-| 其它浏览器 | 浏览器草稿最近列表 + 导入 JSON |
-| 自动保存 | 编辑后约 500ms 写回；失败显示错误 |
-| 旧草稿 | 检测 `m3e:doc`，提示导入为项目 |
-| 句柄 | IndexedDB 缓存工作区目录 handle |
-
-## 阶段 2 已交付
-
-- [x] `prism-bridge/server.mjs`：127.0.0.1:7331，WS 画布 + HTTP apply/status
-- [x] `prism-bridge/mcp-server.mjs`：MCP stdio 工具集
-- [x] `prism-bridge/demo-apply.mjs`：一键推设置页样例
-- [x] 画布：`lib/bridge.ts` + Editor 连接/撤销/应用/状态灯
-- [x] 文档 `prism-bridge/README.md`、方案 `docs/方案-阶段2-MCP桥.md`
-- [x] typecheck / test(677) / build 通过
-
-## 已知限制（阶段 1 可接受）
-
-- 重命名在 FSA 下为「复制新目录 + 删旧目录」（API 无 move）
-- 无封面缩略图、无搜索
-- Safari/Firefox 无文件夹工作区（按调研降级）
-- 分享链接 origin 仍为占位
+1. **项目库**：本地工作区、新建/打开/重命名/删除、自动保存  
+2. **Bridge**：`127.0.0.1:7331`，AI 可实时改画布；无项目时自动新建  
+3. **MCP**：`prism_status/get/apply/set_theme/add_frame/add_part/get_design_system`  
+4. **AI 工作台**（画布内）：风格预设秒切、自定义预设导入导出、设备目标、本机 API vs Bridge 模式条  
+5. **设计系统** `public/design-system.md`：间距/色角色/密度/多设备家族  
+6. **多设备策略** `docs/方案-多设备适配.md`：风格一套、结构分 Compact/Medium/Expanded  
 
 ## 变更日志
 
 | 日期 | 内容 |
 |------|------|
 | 2026-09-15 | 阶段 0 完成并推送 |
-| 2026-09-15 | 阶段 1 本地项目库实现；测试与构建通过 |
-| 2026-09-15 | 阶段 2 Bridge + 画布实时应用 + MCP 工具；测试与构建通过 |
-| 2026-09-15 | 页面级 Bridge 自动建项目；设计系统 v0.1 + MCP 注入；重绘任务中心示例 |
-| 2026-09-15 | 画布内 AI 工作台：风格预设可视化 + 对话生成设计 |
-| 2026-09-15 | 多设备方案定稿：`docs/方案-多设备适配.md`；design-system v0.2 |
-| 2026-09-15 | 自定义预设/导入导出、设备目标、API vs Bridge 模式条 |
+| 2026-09-15 | 阶段 1 本地项目库 |
+| 2026-09-15 | 阶段 2 Bridge + MCP + 画布实时应用 |
+| 2026-09-15 | 页面级自动建项目；设计系统 v0.1 |
+| 2026-09-15 | AI 工作台（风格卡片 + 对话生成） |
+| 2026-09-15 | 自定义预设、设备目标、API/MCP 模式条 |
+| 2026-09-15 | 多设备方案 + design-system v0.2 |
+| 2026-09-15 | 文档整理：索引 + 下一阶段方案 2.1 |
+
+## 已知限制
+
+- 平板 Frame **尚未实现**（方案在 2.1）  
+- 项目库/编辑器视觉仍偏素（2.1 打磨）  
+- Safari 无文件夹工作区（降级可用）  
+- 分享链接 origin 占位  
+- FSA 重命名 = 复制删旧  
 
 ## 下一步
 
-1. 人工验收：起 bridge → 开画布 → `node demo-apply.mjs` → 画布变化  
-2. 配置 MCP 后用 AI 试 `prism_status` / `prism_add_part`  
-3. 视验收修缺陷；再考虑阶段 3 个人样式或体验打磨（用户已标记项目库/编辑器偏素）  
+1. 你确认 [方案-下一阶段.md](./方案-下一阶段.md)（建议整包「按推荐做」）  
+2. 开工 2.1：平板尺寸 + UI 打磨  
+3. 之后进入阶段 3（个人样式与体验深化）  
+
+## 质量基线
+
+- `npm run typecheck` · `npm test` · `npm run build` 必须绿  
+- 最近全量：**677** tests passed  

@@ -89,6 +89,19 @@ async function applyDesign(design) {
   return design;
 }
 
+/** Short design-system rules injected into every generation tool. */
+const DESIGN_SYSTEM_BRIEF = `
+Follow Prism design-system (see project public/design-system.md):
+- 16dp screen margins; vertical rhythm on 4/8 grid (8,16,24,32)
+- One filled primary action per screen; other actions outlined/text
+- List items: icon + title + supporting text; connected runs for homogeneous lists
+- Use palette roles only (primary, secondaryContainer, surface*, onSurface, onSurfaceVariant)
+- theme: { dark:false, shape:"rounded", font:"roboto", motion:"expressive"|"standard", emphasized:true for consumer apps }
+- Multi-screen: semantic frame ids (home/detail/settings); list→detail slide; detail back arrow slideLeft
+- Density: 4–6 list rows, not 2 lonely rows; avoid empty half-screens
+- Look like one product system, not a pile of random widgets
+`.trim();
+
 const TOOLS = [
   {
     name: "prism_status",
@@ -110,9 +123,24 @@ const TOOLS = [
     },
   },
   {
+    name: "prism_get_design_system",
+    description: "Read Prism design-system rules (spacing, color roles, density, screen templates) before generating UI.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    async handler() {
+      const rules = [
+        DESIGN_SYSTEM_BRIEF,
+        "",
+        "Screen templates:",
+        "A list: TopAppBar → 16 → list 4–6 rows → 24 → primary+secondary actions → optional chips → BottomNav",
+        "A detail: TopAppBar(back) → 16 → hero card → 16 → meta list → 24 → primary action",
+        "Anti-patterns: 5 filled buttons, ragged margins, nav overlapping content, card-in-card, error color as brand.",
+      ].join("\n");
+      return JSON.stringify({ ok: true, rules });
+    },
+  },
+  {
     name: "prism_apply_design",
-    description:
-      "Replace the open canvas design with a full Prism Doc JSON (groups[], frames[], paletteKey, theme…). The canvas updates immediately and autosaves.",
+    description: `Replace the open canvas design with a full Prism Doc JSON. ${DESIGN_SYSTEM_BRIEF}`,
     inputSchema: {
       type: "object",
       properties: {
@@ -174,7 +202,7 @@ const TOOLS = [
   },
   {
     name: "prism_add_frame",
-    description: "Add a phone (412×892) or desktop (1280×800) screen to the current design.",
+    description: `Add a phone (412×892) or desktop (1280×800) screen. Use semantic names (home/detail/settings). ${DESIGN_SYSTEM_BRIEF}`,
     inputSchema: {
       type: "object",
       properties: {
@@ -208,7 +236,7 @@ const TOOLS = [
   },
   {
     name: "prism_add_part",
-    description: "Append a part (list item, button, top app bar…) to a frame in the current design.",
+    description: `Append a part to a frame. Prefer list runs + one filled CTA. ${DESIGN_SYSTEM_BRIEF}`,
     inputSchema: {
       type: "object",
       properties: {

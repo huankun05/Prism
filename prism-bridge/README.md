@@ -53,6 +53,11 @@ node demo-apply.mjs
 | POST | `/v1/apply` | `{ "design": Doc }` 推到画布 |
 | POST | `/v1/command` | 自定义命令 |
 
+## 设计系统
+
+生成 UI 前请遵守仓库根目录 `public/design-system.md`。  
+MCP 工具 `prism_get_design_system` 会返回精简规则；`prism_apply_design` 的 description 也内嵌了检查清单。
+
 ## 环境变量
 
 - `PRISM_BRIDGE_PORT` 默认 `7331`

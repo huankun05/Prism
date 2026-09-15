@@ -105,9 +105,11 @@ function legacyPromptDone(): boolean {
 export function ProjectLibrary({
   lang,
   onOpen,
+  bridgeStatus = "idle",
 }: {
   lang: "zh" | "en" | "ja" | "ko";
   onOpen: (exit: LibraryExit) => void;
+  bridgeStatus?: import("@/lib/bridge").BridgeStatus;
 }) {
   const locale = useLang();
   const [mode, setMode] = useState<"fsa" | "fallback">("fallback");
@@ -435,8 +437,39 @@ export function ProjectLibrary({
           </div>
         </header>
 
-        <p style={{ marginTop: 12, fontSize: 12, opacity: 0.55 }}>
-          {text.workspace}: {mode === "fsa" && root ? root.name : text.fallbackNote}
+        <p style={{ marginTop: 12, fontSize: 12, opacity: 0.55, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <span>
+            {text.workspace}: {mode === "fsa" && root ? root.name : text.fallbackNote}
+          </span>
+          <span
+            title={
+              bridgeStatus === "connected"
+                ? lang === "zh"
+                  ? "AI 可通过本地 Bridge 自动画图（无项目时会自动新建）"
+                  : "AI can draw via the local bridge (auto-creates a project if needed)"
+                : lang === "zh"
+                  ? "Bridge 未连接：请运行 node prism-bridge/server.mjs"
+                  : "Bridge offline: run node prism-bridge/server.mjs"
+            }
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "2px 8px",
+              borderRadius: 10,
+              background: "rgba(0,0,0,0.04)",
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                background: bridgeStatus === "connected" ? "#2E7D32" : bridgeStatus === "connecting" ? "#F9A825" : "#cac4d0",
+              }}
+            />
+            Bridge
+          </span>
         </p>
 
         {mode === "fallback" && (

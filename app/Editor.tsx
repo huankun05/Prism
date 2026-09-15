@@ -104,7 +104,7 @@ import { ThemeContext, ensureFontLoaded, ensureLangFontLoaded } from "@/lib/them
 import { BottomSheet, MobileActionBar, MobileInspector, MobileLang, MobileSettings } from "@/components/Mobile";
 import { ConfirmDialog, IconBtn, Segmented } from "@/components/ui";
 import { Lang, LangContext, SEED_TEXT, getLang, setGlobalLang, t, translateDefaultFrameName, translateDefaultText } from "@/lib/i18n";
-import { connectBridge, type BridgeStatus } from "@/lib/bridge";
+import type { BridgeStatus } from "@/lib/bridge";
 
 /** the screens while a model drafts: primary, tertiary and primary container, drifting */
 const DRAFT_GRADIENT = (p: Palette) => `linear-gradient(120deg, ${p.primaryContainer}, ${p.tertiaryContainer}, ${p.primary}, ${p.secondaryContainer}, ${p.primaryContainer})`;
@@ -341,6 +341,8 @@ export default function Editor({
   initialDoc,
   persistDoc,
   onExitLibrary,
+  externalApply,
+  bridgeStatus = "idle",
 }: {
   initialLang: Lang;
   onReady?: () => void;
@@ -349,6 +351,9 @@ export default function Editor({
   /** debounced autosave target; falls back to localStorage when omitted */
   persistDoc?: (doc: Doc) => void | Promise<void>;
   onExitLibrary?: () => void;
+  /** AI / bridge design pushed from the page shell */
+  externalApply?: { doc: Doc; n: number } | null;
+  bridgeStatus?: BridgeStatus;
 }) {
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
@@ -356,7 +361,6 @@ export default function Editor({
   const persistDocRef = useRef(persistDoc);
   persistDocRef.current = persistDoc;
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>("idle");
   const applyDocRef = useRef<(doc: Partial<Doc>, reset: boolean) => void>(() => {});
   const snapshotRef = useRef<(withMeta?: boolean) => void>(() => {});
   const showToastRef = useRef<(msg: string, ms?: number, icon?: string) => void>(() => {});
@@ -2494,25 +2498,19 @@ export default function Editor({
   };
   showToastRef.current = showToast;
 
-  /* Local bridge: AI tools apply designs to this canvas in realtime */
+  /* Designs pushed from the page-level bridge (AI may open a project for you). */
+  const lastApplyN = useRef(0);
   useEffect(() => {
-    const disconnect = connectBridge(
-      {
-        onStatus: setBridgeStatus,
-        onApply: (design) => {
-          if (!isProject(design)) {
-            showToastRef.current(langRef.current === "zh" ? "AI 设计格式无效" : "Invalid AI design", 2800, "error");
-            return;
-          }
-          snapshotRef.current(true);
-          applyDocRef.current(design, false);
-          showToastRef.current(langRef.current === "zh" ? "AI 已更新画布" : "Canvas updated by AI", 2400, "auto_awesome");
-        },
-      },
-      { role: "canvas", project: { kind: "editor" } },
-    );
-    return disconnect;
-  }, []);
+    if (!externalApply || externalApply.n === lastApplyN.current) return;
+    lastApplyN.current = externalApply.n;
+    if (!isProject(externalApply.doc)) {
+      showToastRef.current(langRef.current === "zh" ? "AI 设计格式无效" : "Invalid AI design", 2800, "error");
+      return;
+    }
+    snapshotRef.current(true);
+    applyDocRef.current(externalApply.doc, false);
+    showToastRef.current(langRef.current === "zh" ? "AI 已更新画布" : "Canvas updated by AI", 2400, "auto_awesome");
+  }, [externalApply]);
 
   const updateAiSettings = (s: AiSettings) => {
     setAiSettings(s);

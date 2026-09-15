@@ -1,11 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LogoLoading } from "@/components/LogoLoading";
 import { isLang, setGlobalLang, type Lang } from "@/lib/i18n";
 import { ProjectLibrary, LibraryExit, persistFsaDoc } from "@/components/ProjectLibrary";
-import { saveRecentProject } from "@/lib/storage/fallback";
+import { createFallbackProjectId, saveRecentProject } from "@/lib/storage/fallback";
+import { ensurePermission, supportsDirectoryPicker } from "@/lib/storage/detect";
+import { loadWorkspaceHandle } from "@/lib/storage/handleCache";
+import { createProject, type DirHandleLike } from "@/lib/storage/workspace";
+import { sanitizeFolderName } from "@/lib/storage/types";
+import { connectBridge, type BridgeStatus } from "@/lib/bridge";
+import { isProject } from "@/lib/project";
 import type { Doc } from "@/lib/tokens";
 
 const loadEditor = () => import("./Editor");
@@ -35,11 +41,41 @@ function initialLanguage(): Lang {
 
 const BOOT_FADE_MS = 360;
 
+/** Create a project from an AI design: workspace folder if possible, else browser draft. */
+async function autoCreateFromDesign(doc: Doc, lang: Lang): Promise<LibraryExit> {
+  const fallbackName = lang === "zh" ? "AI 草稿" : "AI draft";
+  const name = sanitizeFolderName(doc.title || fallbackName);
+  if (supportsDirectoryPicker()) {
+    try {
+      const cached = await loadWorkspaceHandle();
+      if (cached) {
+        const ok = await ensurePermission(cached as unknown as DirHandleLike, "readwrite");
+        if (ok) {
+          const item = await createProject(cached as unknown as DirHandleLike, name, doc);
+          return { kind: "fsa", root: cached as unknown as DirHandleLike, folderName: item.folderName, doc };
+        }
+      }
+    } catch {
+      /* fall through to browser draft */
+    }
+  }
+  const id = createFallbackProjectId();
+  saveRecentProject(id, name, doc);
+  return { kind: "fallback", id, name, doc };
+}
+
 export default function Page() {
   const [lang, setLang] = useState<Lang | null>(null);
   const [phase, setPhase] = useState<"loading" | "fading" | "done">("loading");
   const [session, setSession] = useState<LibraryExit | null>(null);
   const [editorKey, setEditorKey] = useState(0);
+  const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>("idle");
+  const [externalApply, setExternalApply] = useState<{ doc: Doc; n: number } | null>(null);
+  const applySeq = useRef(0);
+  const sessionRef = useRef<LibraryExit | null>(null);
+  sessionRef.current = session;
+  const langRef = useRef<Lang>("zh");
+  langRef.current = lang ?? "zh";
 
   useEffect(() => {
     const initialLang = initialLanguage();
@@ -54,6 +90,34 @@ export default function Page() {
     return () => clearTimeout(id);
   }, [phase]);
 
+  /* Bridge lives at page level so AI can draw even from the project library. */
+  useEffect(() => {
+    const disconnect = connectBridge(
+      {
+        onStatus: setBridgeStatus,
+        onApply: (raw) => {
+          if (!isProject(raw)) return;
+          const doc = raw;
+          const current = sessionRef.current;
+          applySeq.current += 1;
+          const n = applySeq.current;
+          if (!current) {
+            void autoCreateFromDesign(doc, langRef.current).then((exit) => {
+              setSession(exit);
+              setEditorKey((k) => k + 1);
+              setPhase("loading");
+              setExternalApply({ doc, n });
+            });
+            return;
+          }
+          setExternalApply({ doc, n });
+        },
+      },
+      { role: "page" },
+    );
+    return disconnect;
+  }, []);
+
   const persistDoc = useMemo(() => {
     if (!session) return undefined;
     if (session.kind === "fsa") {
@@ -66,6 +130,7 @@ export default function Page() {
 
   const onExitLibrary = useCallback(() => {
     setSession(null);
+    setExternalApply(null);
     setPhase("loading");
   }, []);
 
@@ -80,7 +145,12 @@ export default function Page() {
   }
 
   if (!session) {
-    return <ProjectLibrary lang={lang} onOpen={onOpenProject} />;
+    return (
+      <>
+        <ProjectLibrary lang={lang} onOpen={onOpenProject} bridgeStatus={bridgeStatus} />
+        {phase !== "done" && <Boot done={phase === "fading"} />}
+      </>
+    );
   }
 
   return (
@@ -91,6 +161,8 @@ export default function Page() {
         initialDoc={session.doc}
         persistDoc={persistDoc}
         onExitLibrary={onExitLibrary}
+        externalApply={externalApply}
+        bridgeStatus={bridgeStatus}
         onReady={() => setPhase((p) => (p === "loading" ? "fading" : "done"))}
       />
       {phase !== "done" && <Boot done={phase === "fading"} />}

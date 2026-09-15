@@ -334,9 +334,27 @@ const LEFT_TABS: { key: LeftTab; icon: string; title: "parts" | "layers" | "colo
   { key: "ai", icon: "auto_awesome", title: "ai" },
 ];
 
-export default function Editor({ initialLang, onReady }: { initialLang: Lang; onReady?: () => void }) {
+export default function Editor({
+  initialLang,
+  onReady,
+  initialDoc,
+  persistDoc,
+  onExitLibrary,
+}: {
+  initialLang: Lang;
+  onReady?: () => void;
+  /** project-library document; when set, browser draft key is not the source of truth */
+  initialDoc?: Doc | null;
+  /** debounced autosave target; falls back to localStorage when omitted */
+  persistDoc?: (doc: Doc) => void | Promise<void>;
+  onExitLibrary?: () => void;
+}) {
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
+  const initialDocRef = useRef(initialDoc);
+  const persistDocRef = useRef(persistDoc);
+  persistDocRef.current = persistDoc;
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   /* ---------- document ---------- */
   const [lang, setLang] = useState<Lang>(initialLang);
   const [editAccess, setEditAccess] = useState<"checking" | "editable" | "readonly">("checking");
@@ -638,11 +656,18 @@ export default function Editor({ initialLang, onReady }: { initialLang: Lang; on
     // React's development double-run would otherwise read back its own first save
     if (loadedRef.current) return;
     try {
-      const d = localStorage.getItem(DOC_KEY);
-      if (d) {
+      const external = initialDocRef.current;
+      let d: string | null = null;
+      if (external && isProject(external)) {
         hadDocRef.current = true;
-        applyDoc(JSON.parse(d) as Partial<Doc>, false);
-        // frame mode is decided by the device (media-query effect), not restored
+        applyDoc(external, false);
+        d = JSON.stringify(external);
+      } else {
+        d = localStorage.getItem(DOC_KEY);
+        if (d) {
+          hadDocRef.current = true;
+          applyDoc(JSON.parse(d) as Partial<Doc>, false);
+        }
       }
       const before = d ? localStorage.getItem(BEFORE_KEY) : null;
       if (!d) localStorage.removeItem(BEFORE_KEY);
@@ -759,11 +784,31 @@ export default function Editor({ initialLang, onReady }: { initialLang: Lang; on
 
   useEffect(() => {
     if (!loadedRef.current || editAccess !== "editable") return;
+    const doc: Doc = {
+      groups,
+      frames,
+      paletteKey,
+      frame,
+      title,
+      brief,
+      promptEdit,
+      platform: platform ?? undefined,
+      customPalette: customPalette ?? undefined,
+      dynamicColor,
+      theme,
+    };
+    const persist = persistDocRef.current;
+    if (persist) {
+      setSaveStatus("saving");
+      const timer = window.setTimeout(() => {
+        void Promise.resolve(persist(doc))
+          .then(() => setSaveStatus("saved"))
+          .catch(() => setSaveStatus("error"));
+      }, 500);
+      return () => window.clearTimeout(timer);
+    }
     try {
-      localStorage.setItem(
-        DOC_KEY,
-        JSON.stringify({ groups, frames, paletteKey, frame, title, brief, promptEdit, platform: platform ?? undefined, customPalette: customPalette ?? undefined, dynamicColor, theme }),
-      );
+      localStorage.setItem(DOC_KEY, JSON.stringify(doc));
     } catch {}
   }, [editAccess, groups, frames, paletteKey, frame, title, brief, promptEdit, platform, customPalette, dynamicColor, theme]);
 
@@ -4157,6 +4202,71 @@ export default function Editor({ initialLang, onReady }: { initialLang: Lang; on
           onCancel={() => setConfirmClear(false)}
           onConfirm={clearAll}
         />
+
+        {onExitLibrary && (
+          <div
+            style={{
+              position: "fixed",
+              top: 12,
+              left: 12,
+              zIndex: 70,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              pointerEvents: "auto",
+            }}
+          >
+            <button
+              type="button"
+              className="m3-press"
+              onClick={onExitLibrary}
+              title={lang === "zh" ? "返回项目库" : "Back to projects"}
+              style={{
+                height: 36,
+                padding: "0 14px",
+                borderRadius: 18,
+                border: "none",
+                background: p.surfaceContainerLow,
+                color: p.onSurfaceVariant,
+                boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 500,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Icon name="arrow_back" size={18} fill />
+              {lang === "zh" ? "项目库" : "Projects"}
+            </button>
+            <span
+              aria-live="polite"
+              style={{
+                fontSize: 12,
+                color: saveStatus === "error" ? p.error : p.onSurfaceVariant,
+                opacity: saveStatus === "idle" ? 0.5 : 0.85,
+                background: p.surfaceContainerLow,
+                borderRadius: 12,
+                padding: "6px 10px",
+              }}
+            >
+              {saveStatus === "saving"
+                ? lang === "zh"
+                  ? "保存中…"
+                  : "Saving…"
+                : saveStatus === "error"
+                  ? lang === "zh"
+                    ? "保存失败"
+                    : "Save failed"
+                  : saveStatus === "saved"
+                    ? lang === "zh"
+                      ? "已保存"
+                      : "Saved"
+                    : ""}
+            </span>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

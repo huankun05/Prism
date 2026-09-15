@@ -107,12 +107,16 @@ export default function Page() {
           applySeq.current += 1;
           const n = applySeq.current;
           if (!current) {
-            void autoCreateFromDesign(doc, langRef.current).then((exit) => {
-              setSession(exit);
-              setEditorKey((k) => k + 1);
-              setPhase("loading");
-              setExternalApply({ doc, n });
-            });
+            void autoCreateFromDesign(doc, langRef.current)
+              .then((exit) => {
+                setSession(exit);
+                setEditorKey((k) => k + 1);
+                setPhase("loading");
+                setExternalApply({ doc, n });
+              })
+              .catch(() => {
+                /* stay on library; user can open a project manually */
+              });
             return;
           }
           setExternalApply({ doc, n });

@@ -100,8 +100,10 @@ export function connectBridge(handlers: BridgeClientHandlers, hello?: Record<str
   return () => {
     closed = true;
     if (retry) clearTimeout(retry);
+    /* Do not close a CONNECTING socket — Strict Mode remount cancels it mid-handshake
+       and Playwright/dev then never reconnects cleanly. */
     try {
-      ws?.close();
+      if (ws && ws.readyState === WebSocket.OPEN) ws.close();
     } catch {}
     ws = null;
     setStatus("idle");

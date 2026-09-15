@@ -174,8 +174,8 @@ const design = {
       y: 360,
       axis: "y",
       items: [
-        { id: "tt", kind: "text", label: "夜色微光", variant: "filled", bold: true },
-        { id: "ar", kind: "text", label: "Luna · 星河", variant: "text" },
+        { id: "tt", kind: "text", label: "夜色微光", icon: null, variant: "filled", bold: true },
+        { id: "ar", kind: "text", label: "Luna · 星河", icon: null, variant: "text" },
       ],
     },
     {
@@ -192,7 +192,7 @@ const design = {
           variant: "filled",
           value: 42,
         },
-        { id: "tm", kind: "text", label: "1:32  /  3:42", variant: "text" },
+        { id: "tm", kind: "text", label: "1:32  /  3:42", icon: null, variant: "text" },
       ],
     },
     {

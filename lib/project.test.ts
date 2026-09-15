@@ -94,7 +94,7 @@ describe("isProject", () => {
 
   it.each([
     { id: undefined }, { id: 1 }, { kind: "unknown" }, { kind: null }, { label: 1 },
-    { icon: undefined }, { icon: 1 }, { variant: "unknown" }, { variant: undefined },
+    { icon: 1 }, { variant: "unknown" }, { variant: undefined },
     { supporting: null }, { note: 1 }, { selected: NaN }, { selected: Infinity }, { selected: "0" },
     { corners: null }, { corners: {} }, { corners: { tl: 0, tr: 0, bl: 0 } },
     { corners: { tl: "0", tr: 0, bl: 0, br: 0 } }, { corners: { tl: 0, tr: 0, bl: 0, br: Infinity } },

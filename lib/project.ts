@@ -27,7 +27,7 @@ const validItem = (item: unknown) =>
   typeof item.kind === "string" &&
   KINDS.has(item.kind as Kind) &&
   typeof item.label === "string" &&
-  (typeof item.icon === "string" || item.icon === null) &&
+  (item.icon === undefined || typeof item.icon === "string" || item.icon === null) &&
   VARIANTS.some((variant) => variant.key === item.variant) &&
   (item.supporting === undefined || typeof item.supporting === "string") &&
   (item.selected === undefined || Number.isFinite(item.selected)) &&

@@ -1,9 +1,8 @@
-/** Music player app demo for live canvas test */
-const BRIDGE = `http://127.0.0.1:${process.env.PRISM_BRIDGE_PORT || 7331}`;
+const BRIDGE = "http://127.0.0.1:7331";
 
 const design = {
   title: "音乐播放器",
-  brief: "Bridge 实测：正在播放 + 歌单库 + 详情",
+  brief: "发现页 + 全屏播放器",
   frame: "phone",
   platform: "web",
   paletteKey: "purple",
@@ -17,19 +16,18 @@ const design = {
     emphasized: true,
   },
   frames: [
-    { id: "home", name: "发现", x: 0, y: 0, note: "歌单与推荐" },
-    { id: "player", name: "正在播放", x: 492, y: 0, note: "全屏播放器" },
+    { id: "home", name: "发现", x: 0, y: 0 },
+    { id: "player", name: "正在播放", x: 492, y: 0 },
   ],
   groups: [
-    /* —— 发现 / 歌单 —— */
     {
-      id: "h-bar",
+      id: "g1",
       x: 0,
       y: 0,
       axis: "x",
       items: [
         {
-          id: "h-bar-i",
+          id: "bar1",
           kind: "topAppBar",
           label: "发现音乐",
           icon: "menu",
@@ -39,41 +37,40 @@ const design = {
       ],
     },
     {
-      id: "h-hero",
+      id: "g2",
       x: 16,
-      y: 88,
+      y: 96,
       axis: "y",
       items: [
         {
-          id: "h-card",
+          id: "hero",
           kind: "card",
           label: "今日推荐",
-          supporting: "根据你的口味更新 · 30 首",
-          icon: "radio",
+          supporting: "30 首 · 根据你的口味",
+          icon: "headphones",
           variant: "elevated",
-          imagePos: "top",
         },
       ],
     },
     {
-      id: "h-chips",
+      id: "g3",
       x: 16,
-      y: 280,
+      y: 220,
       axis: "x",
       items: [
-        { id: "c1", kind: "chip", label: "推荐", icon: null, variant: "filled", checked: true },
-        { id: "c2", kind: "chip", label: "排行", icon: null, variant: "outlined" },
-        { id: "c3", kind: "chip", label: "电台", icon: null, variant: "outlined" },
+        { id: "chip1", kind: "chip", label: "推荐", icon: null, variant: "filled", checked: true },
+        { id: "chip2", kind: "chip", label: "新歌", icon: null, variant: "outlined" },
+        { id: "chip3", kind: "chip", label: "电台", icon: null, variant: "outlined" },
       ],
     },
     {
-      id: "h-list",
+      id: "g4",
       x: 16,
-      y: 340,
+      y: 280,
       axis: "y",
       items: [
         {
-          id: "t1",
+          id: "s1",
           kind: "listItem",
           label: "夜色微光",
           supporting: "Luna · 3:42",
@@ -82,7 +79,7 @@ const design = {
           action: { to: "player", transition: "slide" },
         },
         {
-          id: "t2",
+          id: "s2",
           kind: "listItem",
           label: "城市霓虹",
           supporting: "Echo · 4:05",
@@ -91,32 +88,39 @@ const design = {
           action: { to: "player", transition: "slide" },
         },
         {
-          id: "t3",
+          id: "s3",
           kind: "listItem",
           label: "雨天咖啡馆",
           supporting: "Bean · 3:18",
-          icon: "coffee",
+          icon: "local_cafe",
           variant: "tonal",
-          action: { to: "player", transition: "slide" },
         },
         {
-          id: "t4",
+          id: "s4",
           kind: "listItem",
           label: "远航",
           supporting: "North · 5:01",
           icon: "sailing",
           variant: "tonal",
         },
+        {
+          id: "s5",
+          kind: "listItem",
+          label: "星尘",
+          supporting: "Orbit · 3:55",
+          icon: "auto_awesome",
+          variant: "tonal",
+        },
       ],
     },
     {
-      id: "h-nav",
+      id: "g5",
       x: 0,
-      y: 816,
+      y: 820,
       axis: "x",
       items: [
         {
-          id: "h-nav-i",
+          id: "nav",
           kind: "bottomNav",
           label: "",
           icon: null,
@@ -131,128 +135,85 @@ const design = {
         },
       ],
     },
-
-    /* —— 正在播放 —— */
     {
-      id: "p-bar",
+      id: "g6",
       x: 492,
       y: 0,
       axis: "x",
       items: [
         {
-          id: "p-bar-i",
+          id: "bar2",
           kind: "topAppBar",
           label: "正在播放",
           icon: "keyboard_arrow_down",
           icon2: "more_vert",
           variant: "tonal",
-          action: { to: "home", transition: "slideDown" },
+          action: { to: "home", transition: "slideUp" },
         },
       ],
     },
     {
-      id: "p-art",
-      x: 560,
-      y: 96,
+      id: "g7",
+      x: 540,
+      y: 100,
       axis: "y",
       items: [
         {
-          id: "p-cover",
-          kind: "box",
-          label: "",
-          icon: "music_note",
-          variant: "filled",
-          size: 280,
-          size2: 280,
-          hasChecked: false,
-          fill: "primaryContainer",
-        },
-      ],
-    },
-    {
-      id: "p-meta",
-      x: 520,
-      y: 400,
-      axis: "y",
-      items: [
-        {
-          id: "p-title",
-          kind: "text",
+          id: "cover",
+          kind: "card",
           label: "夜色微光",
-          variant: "filled",
-          bold: true,
-        },
-        {
-          id: "p-artist",
-          kind: "text",
-          label: "Luna · 星河专辑",
-          variant: "text",
+          supporting: "专辑封面占位",
+          icon: "music_note",
+          variant: "elevated",
         },
       ],
     },
     {
-      id: "p-progress",
+      id: "g8",
       x: 520,
-      y: 480,
+      y: 360,
+      axis: "y",
+      items: [
+        { id: "tt", kind: "text", label: "夜色微光", variant: "filled", bold: true },
+        { id: "ar", kind: "text", label: "Luna · 星河", variant: "text" },
+      ],
+    },
+    {
+      id: "g9",
+      x: 520,
+      y: 460,
       axis: "y",
       items: [
         {
-          id: "p-bar-slider",
+          id: "pr",
           kind: "linearProgress",
           label: "",
           icon: null,
           variant: "filled",
           value: 42,
         },
-        {
-          id: "p-time",
-          kind: "text",
-          label: "1:32 / 3:42",
-          variant: "text",
-        },
+        { id: "tm", kind: "text", label: "1:32  /  3:42", variant: "text" },
       ],
     },
     {
-      id: "p-controls",
-      x: 560,
+      id: "g10",
+      x: 540,
       y: 560,
       axis: "x",
       items: [
-        { id: "p-prev", kind: "iconButton", label: "", icon: "skip_previous", variant: "text" },
-        {
-          id: "p-play",
-          kind: "button",
-          label: "暂停",
-          icon: "pause",
-          variant: "filled",
-        },
-        { id: "p-next", kind: "iconButton", label: "", icon: "skip_next", variant: "text" },
+        { id: "ip1", kind: "iconButton", label: "", icon: "skip_previous", variant: "text" },
+        { id: "pb", kind: "button", label: "暂停", icon: "pause", variant: "filled" },
+        { id: "ip2", kind: "iconButton", label: "", icon: "skip_next", variant: "text" },
       ],
     },
     {
-      id: "p-actions",
+      id: "g11",
       x: 520,
       y: 640,
       axis: "x",
       items: [
-        { id: "p-like", kind: "button", label: "喜欢", icon: "favorite", variant: "outlined" },
-        { id: "p-queue", kind: "button", label: "播放列表", icon: "queue_music", variant: "text" },
-      ],
-    },
-    {
-      id: "p-vol",
-      x: 520,
-      y: 720,
-      axis: "y",
-      items: [
-        {
-          id: "p-vol-slider",
-          kind: "slider",
-          label: "音量",
-          icon: "volume_up",
-          variant: "filled",
-          value: 70,
-        },
+        { id: "lk", kind: "button", label: "喜欢", icon: "favorite", variant: "outlined" },
+        { id: "qd", kind: "button", label: "列表", icon: "queue_music", variant: "text" },
       ],
     },
   ],
@@ -263,4 +224,8 @@ const res = await fetch(`${BRIDGE}/v1/apply`, {
   headers: { "content-type": "application/json" },
   body: JSON.stringify({ design }),
 });
-console.log(res.status, await res.json());
+const body = await res.json();
+console.log("HTTP", res.status, body);
+
+const st = await fetch(`${BRIDGE}/v1/status`).then((r) => r.json());
+console.log("STATUS", st);

@@ -722,9 +722,14 @@ export default function Editor({
     } catch {}
     setAiSettings(loadAiSettings());
     loadedRef.current = true;
-    /* the document is in state; one frame later it is on screen and the boot overlay may go.
-       Not cancelled on cleanup: the development double-run skips this effect the second time. */
+    /* Always signal ready, even when Strict Mode skipped the second mount's body. */
     requestAnimationFrame(() => onReadyRef.current?.());
+  }, []);
+
+  /* Safety: if onReady never fires, still unlock the boot overlay. */
+  useEffect(() => {
+    const t = window.setTimeout(() => onReadyRef.current?.(), 6000);
+    return () => window.clearTimeout(t);
   }, []);
 
   useEffect(() => {

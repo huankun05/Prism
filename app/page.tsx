@@ -84,6 +84,11 @@ export default function Page() {
     setLang(initialLang);
   }, []);
 
+  /* Library does not mount Editor; dismiss boot as soon as we know we are on the library. */
+  useEffect(() => {
+    if (lang && !session && phase === "loading") setPhase("done");
+  }, [lang, session, phase]);
+
   useEffect(() => {
     if (phase !== "fading") return;
     const id = setTimeout(() => setPhase("done"), BOOT_FADE_MS);
@@ -145,12 +150,7 @@ export default function Page() {
   }
 
   if (!session) {
-    return (
-      <>
-        <ProjectLibrary lang={lang} onOpen={onOpenProject} bridgeStatus={bridgeStatus} />
-        {phase !== "done" && <Boot done={phase === "fading"} />}
-      </>
-    );
+    return <ProjectLibrary lang={lang} onOpen={onOpenProject} bridgeStatus={bridgeStatus} />;
   }
 
   return (

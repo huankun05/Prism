@@ -2258,7 +2258,7 @@ export default function Editor({
     } catch {}
   };
 
-  const startDraft = async (idea: string, styleId?: string) => {
+  const startDraft = async (idea: string, styleId?: string, device: "phone" | "desktop" | "both" = "phone") => {
     setShareOpen(false);
     setDraftBusy(true);
     try {
@@ -2267,7 +2267,13 @@ export default function Editor({
         if (!res.ok) throw new Error("guide");
         guideRef.current = await res.text();
       }
-      const prompt = styleId ? ideaWithStyle(idea, styleId) : idea;
+      const deviceHint =
+        device === "desktop"
+          ? "\nTarget: desktop/web screens 1280×800. At least one desktop frame."
+          : device === "both"
+            ? "\nTarget: both phone 412×892 and desktop 1280×800 screens (name paired screens the same when they are the same page)."
+            : "\nTarget: phone screens 412×892.";
+      const prompt = (styleId ? ideaWithStyle(idea, styleId) : idea) + deviceHint;
       const next = await draftDesign(aiSettings, guideRef.current, prompt, lang);
       if (styleId) {
         const st = STYLE_PRESETS.find((x) => x.id === styleId);
@@ -3587,6 +3593,21 @@ export default function Editor({
                       busy={draftBusy}
                       styleId={aiStyleId}
                       onStyleId={setAiStyleId}
+                      bridgeConnected={bridgeStatus === "connected"}
+                      currentDoc={() => ({
+                        paletteKey,
+                        theme,
+                        title,
+                      })}
+                      onBridgeHint={() =>
+                        showToast(
+                          lang === "zh"
+                            ? "终端运行 node prism-bridge/server.mjs，画布 Bridge 灯变绿后 MCP 可改图"
+                            : "Run node prism-bridge/server.mjs; green Bridge light means MCP can edit",
+                          4200,
+                          "cable",
+                        )
+                      }
                       onApplyStyle={(s) => {
                         setPaletteKey(s.paletteKey);
                         patchTheme({
@@ -3598,7 +3619,7 @@ export default function Editor({
                         });
                         showToast(lang === "zh" ? `已套用「${s.label}」` : `Style “${s.label}” applied`, 1800, "palette");
                       }}
-                      onDraft={(idea, sid) => void startDraft(idea, sid)}
+                      onDraft={(idea, sid, device) => void startDraft(idea, sid, device)}
                     />
                     <details style={{ fontSize: 12 }}>
                       <summary style={{ cursor: "pointer", opacity: 0.7, padding: "4px 0" }}>

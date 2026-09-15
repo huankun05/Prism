@@ -13,13 +13,13 @@ export const isLang = (v: unknown): v is Lang => v === "ja" || v === "en" || v =
 
 /* A module-level copy lets non-React helpers (item defaults, prompt text)
  * follow the language without threading it through every call. */
-let current: Lang = "ja";
+let current: Lang = "zh";
 export const getLang = () => current;
 export const setGlobalLang = (l: Lang) => {
   current = l;
 };
 
-export const LangContext = createContext<Lang>("ja");
+export const LangContext = createContext<Lang>("zh");
 export const useLang = () => useContext(LangContext);
 
 export const SEED_TEXT: Record<Lang, { favorite: string; share: string; inbox: string; starred: string; archive: string; supporting: string; start: string }> = {
@@ -126,9 +126,9 @@ export const UI = {
   askAiIdeaFallback: { ja: "（ここに作りたいものを書く）", en: "(describe what to build here)", zh: "（在这里写下想做的东西）" },
   askAiCopy: { ja: "指示をコピー", en: "Copy the instruction", zh: "复制指令" },
   askAiText: {
-    ja: "M3E Canvas のスケッチを作ってください。まず {url} を読み、その手順どおりに設計を JSON で組み立てて、共有リンクの形で返してください。コードを実行できない場合は、設計の JSON をコードブロックで返してください（ファイルに保存して読み込みます）。検証は不要です。\n\n作りたいもの: {idea}",
-    en: "Make an M3E Canvas sketch. First read {url} and follow it: build the design as JSON and reply with a share link. If you cannot run code, reply with the JSON in a code block (it will be saved to a file and opened). No verification is needed.\n\nWhat to build: {idea}",
-    zh: "请制作一个 M3E Canvas 草图。先阅读 {url}，按其中的步骤用 JSON 组织设计，并以分享链接的形式回复。如果无法运行代码，就在代码块中回复设计的 JSON（会保存为文件后打开）。不需要验证。\n\n想做的东西：{idea}",
+    ja: "Prism のスケッチを作ってください。まず {url} を読み、その手順どおりに設計を JSON で組み立てて、共有リンクの形で返してください。コードを実行できない場合は、設計の JSON をコードブロックで返してください（ファイルに保存して読み込みます）。検証は不要です。\n\n作りたいもの: {idea}",
+    en: "Make a Prism sketch. First read {url} and follow it: build the design as JSON and reply with a share link. If you cannot run code, reply with the JSON in a code block (it will be saved to a file and opened). No verification is needed.\n\nWhat to build: {idea}",
+    zh: "请制作一个 Prism 草图。先阅读 {url}，按其中的步骤用 JSON 组织设计，并以分享链接的形式回复。如果无法运行代码，就在代码块中回复设计的 JSON（会保存为文件后打开）。不需要验证。\n\n想做的东西：{idea}",
   },
   askAiGenerate: { ja: "AI で作る", en: "Draft with AI", zh: "让 AI 生成" },
   askAiPasted: { ja: "AI エージェントに貼り付けてください", en: "Paste it into your AI agent", zh: "请粘贴到 AI 代理中" },
@@ -449,7 +449,7 @@ export const KO: Record<UIKey, string> = {
   askAiPasted: "AI 에이전트에 붙여 넣으세요", askAiTitle: "AI에게 설계 맡기기", askAiCopyTitle: "AI 에이전트용 지시", askAiGenerateTitle: "AI 탭의 키로 만들기", aiSetup: "AI 설정", aiSetupHint: "키를 입력하면 여기서 바로 만들 수 있습니다", aiSetupTitle: "AI 탭 열기",
   draftKeep: "이 설계 채택", draftUndo: "이전 설계로 되돌리기",
   askAiIdea: "만들고 싶은 것(예: 레시피를 저장하고 검색하는 앱)", askAiIdeaFallback: "(여기에 만들고 싶은 것을 적으세요)", askAiCopy: "지시 복사",
-  askAiText: "M3E Canvas 스케치를 만들어 주세요. 먼저 {url}을 읽고 그 절차대로 설계를 JSON으로 구성한 뒤, 공유 링크 형태로 답해 주세요. 코드를 실행할 수 없다면 설계 JSON을 코드 블록으로 답해 주세요(파일로 저장해 불러옵니다). 검증은 필요 없습니다.\n\n만들고 싶은 것: {idea}",
+  askAiText: "Prism 스케치를 만들어 주세요. 먼저 {url}을 읽고 그 절차대로 설계를 JSON으로 구성한 뒤, 공유 링크 형태로 답해 주세요. 코드를 실행할 수 없다면 설계 JSON을 코드 블록으로 답해 주세요(파일로 저장해 불러옵니다). 검증은 필요 없습니다.\n\n만들고 싶은 것: {idea}",
   selectedTab: "선택 항목으로 지정",
   selectedHint: "채워진 점이 이 화면에서 선택 상태로 표시되는 항목입니다.",
   shareLinkCopy: "링크 복사", shareLinkHint: "이 설계를 여는 링크(이미지 제외)",

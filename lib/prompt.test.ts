@@ -69,7 +69,7 @@ const QUOTED: Record<Lang, { label: string; others: string[] }> = {
 };
 
 describe("progress track thickness", () => {
-  afterEach(() => setGlobalLang("ja"));
+  afterEach(() => setGlobalLang("zh"));
 
   it.each(LANGS)("describes the selected thickness, including the legacy default, in %s", (lang) => {
     const label = { ja: "トラックの太さ", en: "track thickness", zh: "轨道粗细", ko: "트랙 두께" }[lang];
@@ -91,7 +91,7 @@ describe("progress track thickness", () => {
 });
 
 describe("card image placement", () => {
-  afterEach(() => setGlobalLang("ja"));
+  afterEach(() => setGlobalLang("zh"));
 
   /* the phrase the layout section must carry for each placement */
   const PLACEMENT: Record<Lang, Record<string, string>> = {
@@ -152,7 +152,7 @@ describe("card image placement", () => {
 });
 
 describe("buildPrompt color output", () => {
-  afterEach(() => setGlobalLang("ja")); // restore the module default
+  afterEach(() => setGlobalLang("zh")); // restore the module default
 
   it.each(LANGS)("emits the actual secondary color in both modes and every contrast level in %s", (lang) => {
     for (const contrast of ["standard", "medium", "high"] as const) {
@@ -167,7 +167,7 @@ describe("buildPrompt color output", () => {
 });
 
 describe("navigation rail expansion", () => {
-  afterEach(() => setGlobalLang("ja"));
+  afterEach(() => setGlobalLang("zh"));
 
   it.each(LANGS)("exports imported mixed-group modal rails as collapsed standard rails in %s", (lang) => {
     const doc = fixture();
@@ -255,7 +255,7 @@ describe("navigation rail expansion", () => {
 });
 
 describe("buildPrompt structure", () => {
-  afterEach(() => setGlobalLang("ja")); // restore the module default
+  afterEach(() => setGlobalLang("zh")); // restore the module default
 
   it.each(LANGS)("orders its sections the same way in %s", (lang) => {
     expect(headings(build(lang))).toEqual(SECTIONS[lang]);
@@ -299,7 +299,7 @@ describe("buildPrompt structure", () => {
 /* The placeholder parts state their box, and a dropdown names its options and initial value.
  * Each sits in its own group: a run of mixed kinds would be described as a button group. */
 describe("buildPrompt for the camera, map and dropdown parts", () => {
-  afterEach(() => setGlobalLang("ja"));
+  afterEach(() => setGlobalLang("zh"));
 
   const NOUN: Record<Lang, [camera: string, map: string]> = {
     ja: ["カメラプレビュー", "地図"],

@@ -4,15 +4,15 @@ import "./globals.css";
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "https://lnkiai.github.io"),
-  title: "M3E Canvas",
-  applicationName: "M3E Canvas",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "https://huankun05.github.io"),
+  title: "Prism",
+  applicationName: "Prism",
   alternates: { canonical: `${BASE}/` },
   description:
-    "Sketch Material 3 Expressive screens in the browser and turn them into vibe-coding prompts. / Material 3 Expressive の画面をブラウザで組み立てて、そのままプロンプトに。",
+    "Prism — 用组件拼界面，让 AI 通过 MCP 直接改画布，导出多套技术栈提示词。An AI-operable UI design canvas.",
   openGraph: {
-    title: "M3E Canvas",
-    description: "Design Material 3 Expressive screens, link them, preview them, and copy a prompt for your AI coding tool.",
+    title: "Prism",
+    description: "Semantic UI canvas you and AI can edit together; export prompts for Android, web, and more.",
     images: [`${BASE}/og.png`],
     type: "website",
   },
@@ -30,7 +30,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ja">
+    <html lang="zh">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -1,16 +1,18 @@
-# Contributing to M3E Canvas
+# Contributing to Prism
 
-Thanks for your interest. This page explains how to report problems, propose
-changes and send code. Japanese, Chinese and Korean summaries are at the end.
+Thanks for your interest. Prism is a fork of M3E Canvas (MIT © lnkiai) with a focus on an AI-operable UI design canvas.
+
+**Please read [docs/工程规范.md](docs/工程规范.md) first.** Every change must follow:
+
+**方案 → 实现 → 自检 → 测试 → 文档 → 提交**
 
 ## Before you start
 
 - **Bugs and small fixes**: open an issue or a pull request directly.
 - **New parts, new panels, prompt wording, anything larger**: please open an
   issue first so we can agree on the shape of the change before you spend
-  time on it. Material 3 Expressive has a specific vocabulary, and the prompt
-  is tuned carefully; a short discussion up front saves rework.
-- **Questions and ideas**: use [Discussions](https://github.com/lnkiai/m3e-canvas/discussions).
+  time on it.
+- **Questions and ideas**: open a GitHub issue on this repository.
 
 ## Setting up
 

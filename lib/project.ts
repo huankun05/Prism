@@ -60,14 +60,14 @@ const validFrame = (frame: unknown) =>
 export const isProject = (value: unknown): value is Doc =>
   isRecord(value) && Array.isArray(value.groups) && Array.isArray(value.frames) && value.groups.every(validGroup) && value.frames.every(validFrame) && (value.platform === undefined || isPlatform(value.platform));
 
-/** the file name a project is saved under: m3e-canvas, followed by the app's name when it has one */
+/** the file name a project is saved under: prism, followed by the app's name when it has one */
 export const projectFileName = (doc: Doc) => {
   const name = doc.title
     .trim()
     .replace(/[\\/:*?"<>|]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return name ? `m3e-canvas ${name}.json` : "m3e-canvas.json";
+  return name ? `prism ${name}.json` : "prism.json";
 };
 
 /** hands the document to the browser as a JSON download */

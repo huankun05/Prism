@@ -89,6 +89,9 @@ import { PromptPanel } from "@/components/PromptPanel";
 import { GitHubLink, Mode, Toolbar } from "@/components/Toolbar";
 import { LangMenu } from "@/components/Menus";
 import { AiActionKey, AiPanel, aiErrorText } from "@/components/AiPanel";
+import { AiStudio } from "@/components/AiStudio";
+import { STYLE_PRESETS, ideaWithStyle } from "@/lib/styles";
+import type { StylePreset } from "@/lib/styles";
 import { TidyState } from "@/components/ui";
 import { AiSettings, DEFAULT_AI, hasKey, isSecureUrl, loadAiSettings, proposeBehavior, proposeDescription, pushHistory, saveAiSettings } from "@/lib/ai";
 import { barSlotOf, bodyRect, carryFrame, pullInto, tidyFrame } from "@/lib/tidy";
@@ -464,6 +467,7 @@ export default function Editor({
   /** the groups before and after the last tidy; "undo" is offered only while the after-state is still current */
   const tidyRef = useRef<{ frameId: string; before: Group[]; after: Group[] } | null>(null);
   const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI);
+  const [aiStyleId, setAiStyleId] = useState("clean");
   const [aiBusy, setAiBusy] = useState(false);
   /** the screen the model is working on, which wears the animated ring meanwhile */
   const [aiFrameId, setAiFrameId] = useState<string | null>(null);
@@ -2254,7 +2258,7 @@ export default function Editor({
     } catch {}
   };
 
-  const startDraft = async (idea: string) => {
+  const startDraft = async (idea: string, styleId?: string) => {
     setShareOpen(false);
     setDraftBusy(true);
     try {
@@ -2263,7 +2267,23 @@ export default function Editor({
         if (!res.ok) throw new Error("guide");
         guideRef.current = await res.text();
       }
-      const next = await draftDesign(aiSettings, guideRef.current, idea, lang);
+      const prompt = styleId ? ideaWithStyle(idea, styleId) : idea;
+      const next = await draftDesign(aiSettings, guideRef.current, prompt, lang);
+      if (styleId) {
+        const st = STYLE_PRESETS.find((x) => x.id === styleId);
+        if (st) {
+          next.paletteKey = st.paletteKey;
+          next.theme = {
+            dark: st.theme.dark ?? false,
+            bothModes: next.theme?.bothModes ?? false,
+            contrast: st.theme.contrast ?? "standard",
+            shape: st.theme.shape ?? "rounded",
+            font: next.theme?.font ?? "roboto",
+            emphasized: st.theme.emphasized ?? false,
+            motion: st.theme.motion ?? "standard",
+          };
+        }
+      }
       arrive(next);
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
@@ -3560,7 +3580,35 @@ export default function Editor({
                 ) : leftTab === "motion" ? (
                   <MotionPanel p={p} theme={theme} onChange={patchTheme} />
                 ) : leftTab === "ai" ? (
-                  <AiPanel p={p} settings={aiSettings} onSettings={updateAiSettings} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 0, flex: 1 }}>
+                    <AiStudio
+                      p={p}
+                      settings={aiSettings}
+                      busy={draftBusy}
+                      styleId={aiStyleId}
+                      onStyleId={setAiStyleId}
+                      onApplyStyle={(s) => {
+                        setPaletteKey(s.paletteKey);
+                        patchTheme({
+                          dark: s.theme.dark ?? false,
+                          shape: s.theme.shape ?? "rounded",
+                          motion: s.theme.motion ?? "standard",
+                          emphasized: s.theme.emphasized ?? false,
+                          contrast: s.theme.contrast ?? "standard",
+                        });
+                        showToast(lang === "zh" ? `已套用「${s.label}」` : `Style “${s.label}” applied`, 1800, "palette");
+                      }}
+                      onDraft={(idea, sid) => void startDraft(idea, sid)}
+                    />
+                    <details style={{ fontSize: 12 }}>
+                      <summary style={{ cursor: "pointer", opacity: 0.7, padding: "4px 0" }}>
+                        {lang === "zh" ? "模型设置" : "Model settings"}
+                      </summary>
+                      <div style={{ marginTop: 8 }}>
+                        <AiPanel p={p} settings={aiSettings} onSettings={updateAiSettings} />
+                      </div>
+                    </details>
+                  </div>
                 ) : (
                   <LayersPanel
                     p={p}

@@ -29,6 +29,7 @@ import {
   saveRecentProject,
 } from "@/lib/storage/fallback";
 import { clearLegacyDraftFlag, hasLegacyDraft, readLegacyDraft } from "@/lib/storage/migrate";
+import { applyPersonalStyleToDoc, loadPersonalStyle, type PersonalStyle } from "@/lib/personalStyle";
 import { ConfirmDialog, IconBtn } from "@/components/ui";
 
 export type LibraryExit =
@@ -123,6 +124,8 @@ export function ProjectLibrary({
   const [cardAction, setCardAction] = useState<CardAction>(null);
   const [renameValue, setRenameValue] = useState("");
   const [showLegacy, setShowLegacy] = useState(false);
+  const [useMyStyle, setUseMyStyle] = useState(true);
+  const personal = typeof window === "undefined" ? null : loadPersonalStyle();
 
   const text = useMemo(() => {
     const zh = lang === "zh";
@@ -233,8 +236,12 @@ export function ProjectLibrary({
     setError(null);
     try {
       const name = sanitizeFolderName(newName || "未命名设计");
-      const doc = seedDoc(lang);
+      let doc = seedDoc(lang);
       doc.title = name;
+      if (useMyStyle) {
+        const prof = loadPersonalStyle();
+        if (prof) doc = applyPersonalStyleToDoc(doc, prof);
+      }
       if (mode === "fsa" && root) {
         const item = await createProject(root, name, doc);
         setNewName("");
@@ -551,6 +558,12 @@ export function ProjectLibrary({
                 fontSize: 15,
               }}
             />
+            {personal && (
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, opacity: 0.8 }}>
+                <input type="checkbox" checked={useMyStyle} onChange={(e) => setUseMyStyle(e.target.checked)} />
+                {lang === "zh" ? `用我的样式（${personal.name}）` : `Use my style (${personal.name})`}
+              </label>
+            )}
             <button type="button" disabled={busy} onClick={() => void onCreate()} style={btnStyle(true)}>
               {text.confirm}
             </button>

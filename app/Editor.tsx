@@ -90,6 +90,8 @@ import { GitHubLink, Mode, Toolbar } from "@/components/Toolbar";
 import { LangMenu } from "@/components/Menus";
 import { AiActionKey, AiPanel, aiErrorText } from "@/components/AiPanel";
 import { AiStudio } from "@/components/AiStudio";
+import { PersonalStylePanel } from "@/components/PersonalStylePanel";
+import type { PersonalStyle } from "@/lib/personalStyle";
 import { STYLE_PRESETS, ideaWithStyle } from "@/lib/styles";
 import type { StylePreset } from "@/lib/styles";
 import { TidyState } from "@/components/ui";
@@ -3622,6 +3624,18 @@ export default function Editor({
                         showToast(lang === "zh" ? `已套用「${s.label}」` : `Style “${s.label}” applied`, 1800, "palette");
                       }}
                       onDraft={(idea, sid, device) => void startDraft(idea, sid, device)}
+                    />
+                    <PersonalStylePanel
+                      p={p}
+                      currentDoc={() => ({ paletteKey, theme, title })}
+                      onApply={(style) => {
+                        setPaletteKey(style.paletteKey);
+                        patchTheme(style.theme);
+                        showToast(lang === "zh" ? `已应用「${style.name}」` : `Applied “${style.name}”`, 1800, "palette");
+                      }}
+                      onSaved={(style) =>
+                        showToast(lang === "zh" ? `已保存我的样式「${style.name}」` : `Saved my style “${style.name}”`, 1800, "check")
+                      }
                     />
                     <details style={{ fontSize: 12 }}>
                       <summary style={{ cursor: "pointer", opacity: 0.7, padding: "4px 0" }}>

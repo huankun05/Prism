@@ -104,6 +104,7 @@ import { ThemeContext, ensureFontLoaded, ensureLangFontLoaded } from "@/lib/them
 import { BottomSheet, MobileActionBar, MobileInspector, MobileLang, MobileSettings } from "@/components/Mobile";
 import { ConfirmDialog, IconBtn, Segmented } from "@/components/ui";
 import { Lang, LangContext, SEED_TEXT, getLang, setGlobalLang, t, translateDefaultFrameName, translateDefaultText } from "@/lib/i18n";
+import { connectBridge, type BridgeStatus } from "@/lib/bridge";
 
 /** the screens while a model drafts: primary, tertiary and primary container, drifting */
 const DRAFT_GRADIENT = (p: Palette) => `linear-gradient(120deg, ${p.primaryContainer}, ${p.tertiaryContainer}, ${p.primary}, ${p.secondaryContainer}, ${p.primaryContainer})`;
@@ -355,8 +356,14 @@ export default function Editor({
   const persistDocRef = useRef(persistDoc);
   persistDocRef.current = persistDoc;
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>("idle");
+  const applyDocRef = useRef<(doc: Partial<Doc>, reset: boolean) => void>(() => {});
+  const snapshotRef = useRef<(withMeta?: boolean) => void>(() => {});
+  const showToastRef = useRef<(msg: string, ms?: number, icon?: string) => void>(() => {});
+  const langRef = useRef<Lang>(initialLang);
   /* ---------- document ---------- */
   const [lang, setLang] = useState<Lang>(initialLang);
+  langRef.current = lang;
   const [editAccess, setEditAccess] = useState<"checking" | "editable" | "readonly">("checking");
   const [groups, setGroupState] = useState<Group[]>(() => seed(initialLang));
   /* Enforce the standalone-modal rule for imports, grouping, undo and all edits. */
@@ -651,6 +658,8 @@ export default function Editor({
     if (isPlatform(doc.platform)) setPlatform(doc.platform);
     else if (reset) setPlatform(null);
   };
+  applyDocRef.current = applyDoc;
+  snapshotRef.current = snapshot;
 
   useEffect(() => {
     // React's development double-run would otherwise read back its own first save
@@ -2483,6 +2492,27 @@ export default function Editor({
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), ms);
   };
+  showToastRef.current = showToast;
+
+  /* Local bridge: AI tools apply designs to this canvas in realtime */
+  useEffect(() => {
+    const disconnect = connectBridge(
+      {
+        onStatus: setBridgeStatus,
+        onApply: (design) => {
+          if (!isProject(design)) {
+            showToastRef.current(langRef.current === "zh" ? "AI 设计格式无效" : "Invalid AI design", 2800, "error");
+            return;
+          }
+          snapshotRef.current(true);
+          applyDocRef.current(design, false);
+          showToastRef.current(langRef.current === "zh" ? "AI 已更新画布" : "Canvas updated by AI", 2400, "auto_awesome");
+        },
+      },
+      { role: "canvas", project: { kind: "editor" } },
+    );
+    return disconnect;
+  }, []);
 
   const updateAiSettings = (s: AiSettings) => {
     setAiSettings(s);
@@ -4264,6 +4294,42 @@ export default function Editor({
                       ? "已保存"
                       : "Saved"
                     : ""}
+            </span>
+            <span
+              title={
+                bridgeStatus === "connected"
+                  ? lang === "zh"
+                    ? "本地 Bridge 已连接（AI 可改画布）"
+                    : "Local bridge connected (AI can edit)"
+                  : lang === "zh"
+                    ? "本地 Bridge 未连接（node prism-bridge/server.mjs）"
+                    : "Bridge offline (node prism-bridge/server.mjs)"
+              }
+              style={{
+                fontSize: 12,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                background: p.surfaceContainerLow,
+                borderRadius: 12,
+                padding: "6px 10px",
+                color: bridgeStatus === "connected" ? p.primary : p.onSurfaceVariant,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  background:
+                    bridgeStatus === "connected"
+                      ? "#2E7D32"
+                      : bridgeStatus === "connecting"
+                        ? "#F9A825"
+                        : p.outlineVariant,
+                }}
+              />
+              {lang === "zh" ? "Bridge" : "Bridge"}
             </span>
           </div>
         )}

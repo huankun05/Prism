@@ -1,0 +1,15 @@
+{
+  "name": "prism-bridge",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Local bridge for Prism canvas: WebSocket to the editor, HTTP for MCP agents.",
+  "scripts": {
+    "start": "node server.mjs",
+    "mcp": "node mcp-server.mjs",
+    "demo": "node demo-apply.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

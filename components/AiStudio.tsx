@@ -23,7 +23,7 @@ import { Icon } from "./M3Node";
 import { AiWriteBtn } from "./AiPanel";
 
 type ChatMsg = { id: string; role: "user" | "assistant"; text: string };
-type DeviceTarget = "phone" | "desktop" | "both";
+type DeviceTarget = "phone" | "tablet" | "desktop" | "both";
 
 /**
  * In-canvas AI studio.

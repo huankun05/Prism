@@ -2258,7 +2258,7 @@ export default function Editor({
     } catch {}
   };
 
-  const startDraft = async (idea: string, styleId?: string, device: "phone" | "desktop" | "both" = "phone") => {
+  const startDraft = async (idea: string, styleId?: string, device: "phone" | "tablet" | "desktop" | "both" = "phone") => {
     setShareOpen(false);
     setDraftBusy(true);
     try {
@@ -2269,10 +2269,12 @@ export default function Editor({
       }
       const deviceHint =
         device === "desktop"
-          ? "\nTarget: desktop/web screens 1280×800. At least one desktop frame."
-          : device === "both"
-            ? "\nTarget: both phone 412×892 and desktop 1280×800 screens (name paired screens the same when they are the same page)."
-            : "\nTarget: phone screens 412×892.";
+          ? "\nTarget: desktop/web 1280×800. Use side navigation rail (navRail), not bottom navigation. Medium content column max ~720–960."
+          : device === "tablet"
+            ? "\nTarget: tablet portrait 834×1112. Medium window class: can keep bottom nav or side rail; wider margins 20–24."
+            : device === "both"
+              ? "\nTarget: phone 412×892 AND desktop 1280×800 for the same product pages (same frame names). Phone: bottomNav. Desktop: navRail. Shared palette/theme only once at Doc top."
+              : "\nTarget: phone screens 412×892 with bottomNav.";
       const prompt = (styleId ? ideaWithStyle(idea, styleId) : idea) + deviceHint;
       const next = await draftDesign(aiSettings, guideRef.current, prompt, lang);
       if (styleId) {

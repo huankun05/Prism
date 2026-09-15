@@ -210,6 +210,7 @@ export function FrameSizePicker({
     <Segmented<FramePreset>
       options={[
         { key: "phone", icon: "smartphone", label: compact ? undefined : t("phoneFrame", lang), title: t("phoneFrame", lang) },
+        { key: "tablet", icon: "tablet_mac", label: compact ? undefined : t("tabletFrame", lang), title: t("tabletFrame", lang) },
         { key: "desktop", icon: "desktop_windows", label: compact ? undefined : t("desktopFrame", lang), title: t("desktopFrame", lang) },
       ]}
       value={framePresetOf(frame)}

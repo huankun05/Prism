@@ -181,6 +181,7 @@ describe("frame helpers", () => {
 
   it("framePresetPatch returns the right w/h pair", () => {
     expect(framePresetPatch("phone")).toEqual({ w: undefined, h: undefined });
+    expect(framePresetPatch("tablet")).toEqual({ w: 834, h: 1112 });
     expect(framePresetPatch("desktop")).toEqual({ w: DESKTOP_W, h: DESKTOP_H });
   });
 

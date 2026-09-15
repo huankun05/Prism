@@ -384,35 +384,54 @@ export function ProjectLibrary({
         position: "fixed",
         inset: 0,
         overflow: "auto",
-        background: "linear-gradient(160deg, #f6f0ff 0%, #fffbfe 40%, #eef7ff 100%)",
+        background:
+          "radial-gradient(1200px 600px at 10% -10%, rgba(103,80,164,0.18), transparent 55%), radial-gradient(900px 500px at 100% 0%, rgba(29,78,216,0.14), transparent 50%), #f7f5fb",
         fontFamily: "Roboto, system-ui, sans-serif",
         color: "#1c1b1f",
       }}
     >
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "48px 24px 80px" }}>
-        <header style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      <div style={{ maxWidth: 980, margin: "0 auto", padding: "40px 24px 88px" }}>
+        <header
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+            padding: 20,
+            borderRadius: 24,
+            background: "rgba(255,255,255,0.72)",
+            border: "1px solid rgba(255,255,255,0.9)",
+            boxShadow: "0 10px 40px rgba(60,40,120,0.08)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: "#6750A4",
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  background: "linear-gradient(135deg,#6750A4,#1B57C9)",
                   color: "#fff",
                   display: "grid",
                   placeItems: "center",
                   fontWeight: 700,
+                  fontSize: 18,
+                  boxShadow: "0 8px 20px rgba(103,80,164,0.35)",
                 }}
               >
                 P
               </span>
-              <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600 }}>Prism</h1>
+              <div>
+                <h1 style={{ margin: 0, fontSize: 26, fontWeight: 650, letterSpacing: -0.3 }}>Prism</h1>
+                <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>{text.subtitle}</p>
+              </div>
             </div>
-            <h2 style={{ margin: "12px 0 4px", fontSize: 20, fontWeight: 500 }}>{text.title}</h2>
-            <p style={{ margin: 0, opacity: 0.72, fontSize: 14, maxWidth: 480 }}>{text.subtitle}</p>
+            <h2 style={{ margin: "18px 0 0", fontSize: 18, fontWeight: 600 }}>{text.title}</h2>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             {supportsDirectoryPicker() && (
               <button type="button" onClick={() => void onPickWorkspace()} disabled={busy} style={btnStyle(false)}>
                 {mode === "fsa" ? text.changeWs : text.bind}
@@ -546,22 +565,39 @@ export function ProjectLibrary({
         ) : items.length === 0 ? (
           <div
             style={{
-              marginTop: 48,
+              marginTop: 40,
               textAlign: "center",
-              padding: 48,
-              borderRadius: 24,
-              border: "1px dashed #cac4d0",
-              background: "rgba(255,255,255,0.5)",
+              padding: "56px 28px",
+              borderRadius: 28,
+              border: "1px dashed #c4b5e0",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.55))",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
             }}
           >
-            <p style={{ margin: 0, fontSize: 16, opacity: 0.7 }}>{text.empty}</p>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                margin: "0 auto 16px",
+                borderRadius: 18,
+                background: "linear-gradient(135deg,#EADDFF,#D3E4FF)",
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <span style={{ fontSize: 24 }}>✦</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 500, opacity: 0.75 }}>{text.empty}</p>
+            <p style={{ margin: "8px 0 0", fontSize: 13, opacity: 0.5 }}>
+              {lang === "zh" ? "新建项目，或让 AI 从左侧工作台直接画一版" : "Create a project, or let AI draft from the studio"}
+            </p>
           </div>
         ) : (
           <div
             style={{
-              marginTop: 28,
+              marginTop: 24,
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
               gap: 16,
             }}
           >
@@ -570,13 +606,15 @@ export function ProjectLibrary({
                 key={item.folderName}
                 style={{
                   background: "#fff",
-                  borderRadius: 16,
-                  padding: 16,
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                  borderRadius: 20,
+                  padding: 18,
+                  boxShadow: "0 6px 24px rgba(40,20,80,0.07)",
+                  border: "1px solid rgba(0,0,0,0.04)",
                   opacity: item.readable ? 1 : 0.55,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 8,
+                  gap: 10,
+                  transition: "transform 120ms, box-shadow 120ms",
                 }}
               >
                 <button

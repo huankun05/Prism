@@ -116,17 +116,20 @@ export function detectAiMode(opts: { bridgeConnected: boolean; hasLocalKey: bool
 }
 
 /** default frames for a generation target */
-export function framesForTarget(target: "phone" | "desktop" | "both"): Doc["frames"] {
+export function framesForTarget(target: "phone" | "tablet" | "desktop" | "both"): Doc["frames"] {
   const phone = { id: "home", name: "Home", x: 0, y: 0 };
   const detail = { id: "detail", name: "Detail", x: 492, y: 0 };
+  const tablet = { id: "home", name: "Home", x: 0, y: 0, w: 834, h: 1112 };
   const desktop = { id: "home", name: "Home", x: 0, y: 0, w: 1280, h: 800 };
+  if (target === "tablet") return [tablet];
   if (target === "desktop") return [desktop];
   if (target === "both") return [phone, detail, { ...desktop, x: 0, y: 980 }];
   return [phone, detail];
 }
 
-export const DEVICE_OPTIONS: { key: "phone" | "desktop" | "both"; label: string; blurb: string }[] = [
+export const DEVICE_OPTIONS: { key: "phone" | "tablet" | "desktop" | "both"; label: string; blurb: string }[] = [
   { key: "phone", label: "手机", blurb: "412×892" },
+  { key: "tablet", label: "平板", blurb: "834×1112" },
   { key: "desktop", label: "桌面/网页", blurb: "1280×800" },
   { key: "both", label: "双端", blurb: "手机 + 桌面" },
 ];

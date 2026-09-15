@@ -21,6 +21,10 @@ export const SETTLE_MS = 340;
 export const PHONE_W = 412;
 export const PHONE_H = 892;
 export const PHONE_R = 40;
+/** Medium window class: tablet portrait (and similar Android tablets) */
+export const TABLET_W = 834;
+export const TABLET_H = 1112;
+export const TABLET_R = 32;
 export const DESKTOP_W = 1280;
 export const DESKTOP_H = 800;
 export const DESKTOP_R = 28;
@@ -1452,21 +1456,37 @@ export const isPlace = (v: unknown): v is Place => v === "top" || v === "center"
 /** how a selection of parts is lined up: an edge or centre to share, or equal gaps along an axis */
 export type AlignKind = "left" | "centerH" | "right" | "distributeH" | "top" | "centerV" | "bottom" | "distributeV";
 
-export type FramePreset = "phone" | "desktop";
+export type FramePreset = "phone" | "tablet" | "desktop";
 export const frameSizeOf = (f: Frame) => ({ w: f.w ?? PHONE_W, h: f.h ?? PHONE_H });
 export const isPhoneFrame = (f: Frame) => {
   const { w, h } = frameSizeOf(f);
   return w === PHONE_W && h === PHONE_H;
 };
-export const framePresetOf = (f: Frame): FramePreset => (isPhoneFrame(f) ? "phone" : "desktop");
+export const isTabletFrame = (f: Frame) => {
+  const { w, h } = frameSizeOf(f);
+  return w === TABLET_W && h === TABLET_H;
+};
+export const framePresetOf = (f: Frame): FramePreset => {
+  if (isPhoneFrame(f)) return "phone";
+  if (isTabletFrame(f)) return "tablet";
+  return "desktop";
+};
 export const framePresetPatch = (preset: FramePreset): Pick<Frame, "w" | "h"> =>
-  preset === "desktop" ? { w: DESKTOP_W, h: DESKTOP_H } : { w: undefined, h: undefined };
+  preset === "desktop"
+    ? { w: DESKTOP_W, h: DESKTOP_H }
+    : preset === "tablet"
+      ? { w: TABLET_W, h: TABLET_H }
+      : { w: undefined, h: undefined };
 export const frameRect = (f: Frame) => {
   const { w, h } = frameSizeOf(f);
   return { l: f.x, t: f.y, r: f.x + w, b: f.y + h };
 };
 /** the corner radius of a screen: a phone's rounded glass, a flatter window for the desktop */
-export const frameRadius = (f: Frame) => (isPhoneFrame(f) ? PHONE_R : DESKTOP_R);
+export const frameRadius = (f: Frame) => {
+  if (isPhoneFrame(f)) return PHONE_R;
+  if (isTabletFrame(f)) return TABLET_R;
+  return DESKTOP_R;
+};
 
 /** parts that span the screen edge to edge and follow its width when it changes */
 export const FULL_WIDTH: Kind[] = ["topAppBar", "bottomNav", "tabs"];

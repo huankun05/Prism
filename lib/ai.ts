@@ -252,3 +252,40 @@ export async function draftDesign(s: AiSettings, guide: string, idea: string, la
   return j;
 }
 
+/** Revise one canvas part from a user instruction; returns only allowed text fields. */
+export async function revisePart(
+  s: AiSettings,
+  part: { id: string; kind: string; label: string; supporting?: string; icon?: string | null; variant: string },
+  instruction: string,
+  lang: Lang,
+  signal?: AbortSignal,
+): Promise<{ label?: string; supporting?: string; icon?: string | null; variant?: string }> {
+  const system = [
+    "You edit ONE UI part inside a design canvas (Prism).",
+    "Change only the fields you return. Keep layout; do not invent new screens.",
+    `Answer in ${LANG_NAME[lang]}.`,
+    'Reply JSON only: {"label"?: string, "supporting"?: string, "icon"?: string|null, "variant"?: "filled"|"tonal"|"elevated"|"outlined"|"text"}',
+  ].join("\n");
+  const user = [
+    `Part kind=${part.kind} variant=${part.variant}`,
+    `label=${JSON.stringify(part.label)}`,
+    part.supporting ? `supporting=${JSON.stringify(part.supporting)}` : "",
+    part.icon ? `icon=${part.icon}` : "",
+    "",
+    `Instruction: ${instruction}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const j = parseJsonObject(await complete(s, system, user, signal, 800));
+  const out: { label?: string; supporting?: string; icon?: string | null; variant?: string } = {};
+  if (typeof j.label === "string") out.label = j.label.slice(0, 80);
+  if (typeof j.supporting === "string") out.supporting = j.supporting.slice(0, 160);
+  if (j.icon === null) out.icon = null;
+  else if (typeof j.icon === "string") out.icon = j.icon.slice(0, 40);
+  if (typeof j.variant === "string" && ["filled", "tonal", "elevated", "outlined", "text"].includes(j.variant)) {
+    out.variant = j.variant;
+  }
+  if (!Object.keys(out).length) throw new Error("json");
+  return out;
+}
+

@@ -89,7 +89,7 @@ import { PromptPanel } from "@/components/PromptPanel";
 import { GitHubLink, Mode, Toolbar } from "@/components/Toolbar";
 import { LangMenu } from "@/components/Menus";
 import { AiActionKey, AiPanel, aiErrorText } from "@/components/AiPanel";
-import { AiStudio } from "@/components/AiStudio";
+import { AiStudio, loadApplyMode, type ApplyMode } from "@/components/AiStudio";
 import { PersonalStylePanel } from "@/components/PersonalStylePanel";
 import { IconBrowser } from "@/components/IconBrowser";
 import { DESIGN_PACKS, PackId, exportTokenCss, packById, packPalette, packTheme } from "@/lib/packs";
@@ -472,6 +472,7 @@ export default function Editor({
   const tidyRef = useRef<{ frameId: string; before: Group[]; after: Group[] } | null>(null);
   const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI);
   const [aiStyleId, setAiStyleId] = useState("clean");
+  const [applyMode, setApplyMode] = useState<ApplyMode>("instant");
   const [designPack, setDesignPack] = useState<PackId>("material");
   const designPackRef = useRef<PackId>("material");
   designPackRef.current = designPack;
@@ -2541,6 +2542,12 @@ export default function Editor({
 
   /* Designs pushed from the page-level bridge (AI may open a project for you). */
   const lastApplyN = useRef(0);
+  const applyModeRef = useRef<ApplyMode>("instant");
+  applyModeRef.current = applyMode;
+  useEffect(() => {
+    setApplyMode(loadApplyMode());
+  }, []);
+
   useEffect(() => {
     if (!externalApply || externalApply.n === lastApplyN.current) return;
     lastApplyN.current = externalApply.n;
@@ -2549,8 +2556,24 @@ export default function Editor({
       return;
     }
     snapshotRef.current(true);
-    applyDocRef.current(externalApply.doc, false);
-    showToastRef.current(langRef.current === "zh" ? "AI 已更新画布" : "Canvas updated by AI", 2400, "auto_awesome");
+    const doc = externalApply.doc;
+    if (applyModeRef.current === "instant") {
+      applyDocRef.current(doc, false);
+      showToastRef.current(langRef.current === "zh" ? "AI 已更新画布" : "Canvas updated by AI", 2400, "auto_awesome");
+      return;
+    }
+    /* staged: screens first, then groups one by one */
+    const framesOnly = { ...doc, groups: [] as typeof doc.groups };
+    applyDocRef.current(framesOnly, false);
+    let i = 0;
+    const step = () => {
+      i += 1;
+      const partial = { ...doc, groups: doc.groups.slice(0, i) };
+      applyDocRef.current(partial, false);
+      if (i < doc.groups.length) window.setTimeout(step, 280);
+      else showToastRef.current(langRef.current === "zh" ? "AI 已分步绘制完成" : "Staged draw complete", 2200, "auto_awesome");
+    };
+    window.setTimeout(step, 320);
   }, [externalApply]);
 
   const updateAiSettings = (s: AiSettings) => {
@@ -3679,6 +3702,12 @@ export default function Editor({
                       styleId={aiStyleId}
                       onStyleId={setAiStyleId}
                       bridgeConnected={bridgeStatus === "connected"}
+                      applyMode={applyMode}
+                      onApplyMode={setApplyMode}
+                      selectedPart={selected}
+                      onRevisePart={(_instruction, patch) => {
+                        patchSelected(patch as Partial<Item>);
+                      }}
                       currentDoc={() => ({
                         paletteKey,
                         theme,

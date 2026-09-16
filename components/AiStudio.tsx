@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Palette } from "@/lib/tokens";
 import { useLang } from "@/lib/i18n";
-import { AiSettings, hasKey } from "@/lib/ai";
+import { AiSettings, hasKey, revisePart } from "@/lib/ai";
 import { STYLE_PRESETS, StylePreset, ideaWithStyle } from "@/lib/styles";
 import {
   DEVICE_OPTIONS,
@@ -18,20 +18,32 @@ import {
   upsertUserPreset,
   type AiMode,
 } from "@/lib/styleStore";
-import type { Doc } from "@/lib/tokens";
+import type { Doc, Item } from "@/lib/tokens";
 import { Icon } from "./M3Node";
 import { AiWriteBtn } from "./AiPanel";
 
 type ChatMsg = { id: string; role: "user" | "assistant"; text: string };
 type DeviceTarget = "phone" | "tablet" | "desktop" | "both";
+export type ApplyMode = "instant" | "staged";
 
-/**
- * In-canvas AI studio.
- * - Instant style apply (no model)
- * - User presets: save current, import, export
- * - Device target for generation
- * - Mode split: local API key vs Bridge/MCP
- */
+const APPLY_MODE_KEY = "prism:apply-mode";
+
+export function loadApplyMode(): ApplyMode {
+  try {
+    return localStorage.getItem(APPLY_MODE_KEY) === "staged" ? "staged" : "instant";
+  } catch {
+    return "instant";
+  }
+}
+
+export function saveApplyMode(mode: ApplyMode) {
+  try {
+    localStorage.setItem(APPLY_MODE_KEY, mode);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function AiStudio({
   p,
   settings,
@@ -43,6 +55,10 @@ export function AiStudio({
   bridgeConnected,
   currentDoc,
   onBridgeHint,
+  applyMode,
+  onApplyMode,
+  selectedPart,
+  onRevisePart,
 }: {
   p: Palette;
   settings: AiSettings;
@@ -54,11 +70,17 @@ export function AiStudio({
   bridgeConnected: boolean;
   currentDoc: () => Pick<Doc, "paletteKey" | "theme" | "title">;
   onBridgeHint?: () => void;
+  applyMode: ApplyMode;
+  onApplyMode: (m: ApplyMode) => void;
+  selectedPart: Item | null;
+  onRevisePart: (instruction: string, patch: Partial<Item>) => void;
 }) {
   const lang = useLang();
   const zh = lang === "zh";
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
+  const [regionInput, setRegionInput] = useState("");
+  const [regionBusy, setRegionBusy] = useState(false);
   const [userPresets, setUserPresets] = useState<UserStylePreset[]>(() => loadUserPresets());
   const [device, setDevice] = useState<DeviceTarget>("phone");
   const [modeInfo, setModeInfo] = useState(true);
@@ -70,6 +92,10 @@ export function AiStudio({
   const mode: AiMode = detectAiMode({ bridgeConnected, hasLocalKey: readyLocal });
   const presets = useMemo(() => allPresets(userPresets), [userPresets]);
 
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages]);
+
   const modeText = useMemo(() => {
     if (mode === "both")
       return zh
@@ -77,15 +103,13 @@ export function AiStudio({
         : "Dual channel: local API can draft; Bridge/MCP can also edit the canvas.";
     if (mode === "bridge")
       return zh
-        ? "Bridge/MCP 模式：外部 AI 工具改画布；本机尚未配置 API Key，不能在面板内生成。"
-        : "Bridge/MCP mode: external agents edit the canvas. Local API key not set — in-panel generate disabled.";
+        ? "Bridge/MCP：外部工具改画布。分步/即时由画布「绘制方式」决定。"
+        : "Bridge/MCP: external agents edit. Instant vs staged is set below.";
     if (mode === "local-api")
       return zh
-        ? "本机 API 模式：在面板内对话并生成。Bridge 未连接时，外部 MCP 无法改画布。"
-        : "Local API mode: chat and draft in-panel. Bridge offline — external MCP cannot edit.";
-    return zh
-      ? "未连接：配置 API Key，或启动 prism-bridge 并让画布连上。"
-      : "Not connected: set an API key, or start prism-bridge with the canvas online.";
+        ? "本机 API：可整页生成，也可对选中部件做区域修改。"
+        : "Local API: full drafts plus region edits on a selected part.";
+    return zh ? "未连接：配置 API Key 或启动 Bridge。" : "Offline: set API key or start bridge.";
   }, [mode, zh]);
 
   const push = (role: ChatMsg["role"], text: string) => {
@@ -96,7 +120,7 @@ export function AiStudio({
   const applyPreset = (s: StylePreset) => {
     onStyleId(s.id);
     onApplyStyle(s);
-    push("assistant", zh ? `已套用「${s.label}」（立即生效）。` : `Applied “${s.label}” instantly.`);
+    push("assistant", zh ? `已套用「${s.label}」。` : `Applied “${s.label}”.`);
   };
 
   const send = () => {
@@ -108,15 +132,53 @@ export function AiStudio({
       push(
         "assistant",
         zh
-          ? "面板内生成需要本机 API Key（模型设置里配置）。若你用外部 Claude/MCP，请启动 bridge 后由外部工具调用 prism_* 工具改画布。"
-          : "In-panel generate needs a local API key (Model settings). With external MCP, start the bridge and call prism_* tools there.",
+          ? "整页生成需要本机 API Key。区域修改在选中部件后使用下方「区域修改」。外部 MCP 仍可改画布。"
+          : "Full draft needs a local API key. Use Region edit after selecting a part. MCP can still edit.",
       );
       return;
     }
     const style = presets.find((s) => s.id === styleId) ?? STYLE_PRESETS[0];
-    const devLabel = DEVICE_OPTIONS.find((d) => d.key === device)?.label ?? "";
-    push("assistant", zh ? `按「${style.label}」· ${devLabel} 起草…` : `Drafting in “${style.label}” · ${devLabel}…`);
+    push("assistant", zh ? `按「${style.label}」· ${device} 起草…` : `Drafting “${style.label}”…`);
     onDraft(text, style.id, device);
+  };
+
+  const sendRegion = async () => {
+    const text = regionInput.trim();
+    if (!text || regionBusy || !selectedPart) return;
+    if (!readyLocal) {
+      push("assistant", zh ? "区域修改需要本机 API Key。" : "Region edit needs a local API key.");
+      return;
+    }
+    setRegionBusy(true);
+    push("user", `[区域] ${text}`);
+    try {
+      const patch = await revisePart(
+        settings,
+        {
+          id: selectedPart.id,
+          kind: selectedPart.kind,
+          label: selectedPart.label,
+          supporting: selectedPart.supporting,
+          icon: selectedPart.icon,
+          variant: selectedPart.variant,
+        },
+        text,
+        lang,
+      );
+      onRevisePart(text, patch as Partial<Item>);
+      push(
+        "assistant",
+        zh
+          ? `已根据指令修改选中部件：${Object.keys(patch).join(", ") || "字段"}。可继续选中其它区域。`
+          : `Updated selected part fields: ${Object.keys(patch).join(", ") || "fields"}.`,
+      );
+      setRegionInput("");
+    } catch (e) {
+      const m = e instanceof Error ? e.message : String(e);
+      push("assistant", zh ? `区域修改失败：${m}` : `Region edit failed: ${m}`);
+    } finally {
+      setRegionBusy(false);
+    }
   };
 
   const saveCurrent = () => {
@@ -126,7 +188,6 @@ export function AiStudio({
     const preset = presetFromDoc(doc, name);
     setUserPresets(upsertUserPreset(preset));
     onStyleId(preset.id);
-    push("assistant", zh ? `已保存预设「${name}」。可导出分享。` : `Saved preset “${name}”. You can export it.`);
   };
 
   const onImportFile = async (file: File | null) => {
@@ -136,17 +197,13 @@ export function AiStudio({
       let merged = loadUserPresets();
       for (const item of list) merged = upsertUserPreset(item);
       setUserPresets(loadUserPresets());
-      push("assistant", zh ? `已导入 ${list.length} 个预设。` : `Imported ${list.length} preset(s).`);
     } catch {
-      push("assistant", zh ? "导入失败：需要有效的预设 JSON。" : "Import failed: invalid preset JSON.");
+      push("assistant", zh ? "导入失败" : "Import failed");
     }
   };
 
   const exportJson = () => {
-    if (!userPresets.length) {
-      push("assistant", zh ? "还没有自定义预设可导出。" : "No custom presets to export.");
-      return;
-    }
+    if (!userPresets.length) return;
     const blob = new Blob([exportPresetsJson(userPresets)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -155,9 +212,20 @@ export function AiStudio({
     setTimeout(() => URL.revokeObjectURL(a.href), 0);
   };
 
+  const btn = (primary: boolean): React.CSSProperties => ({
+    appearance: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "8px 12px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 600,
+    background: primary ? p.primary : p.surfaceContainerHigh,
+    color: primary ? p.onPrimary : p.onSurfaceVariant,
+  });
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 0 }}>
-      {/* mode banner */}
       {modeInfo && (
         <div
           style={{
@@ -172,82 +240,96 @@ export function AiStudio({
             alignItems: "flex-start",
           }}
         >
-          <Icon name={mode === "none" ? "cloud_off" : mode === "bridge" ? "cable" : mode === "both" ? "hub" : "key"} size={18} />
+          <Icon name={mode === "none" ? "cloud_off" : "hub"} size={18} />
           <div style={{ flex: 1 }}>
             <strong style={{ display: "block", marginBottom: 2 }}>
-              {mode === "both" ? (zh ? "API + Bridge" : "API + Bridge") : mode === "bridge" ? (zh ? "Bridge / MCP" : "Bridge / MCP") : mode === "local-api" ? (zh ? "本机 API" : "Local API") : zh ? "未连接" : "Offline"}
+              {mode === "none" ? (zh ? "未连接" : "Offline") : mode === "bridge" ? "Bridge / MCP" : mode === "local-api" ? (zh ? "本机 API" : "Local API") : "API + Bridge"}
             </strong>
             {modeText}
             {mode === "bridge" && onBridgeHint && (
-              <button
-                type="button"
-                onClick={onBridgeHint}
-                style={{
-                  marginTop: 6,
-                  border: "none",
-                  background: "transparent",
-                  color: p.primary,
-                  cursor: "pointer",
-                  padding: 0,
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}
-              >
-                {zh ? "查看 Bridge 说明 →" : "How to connect Bridge →"}
+              <button type="button" onClick={onBridgeHint} style={{ marginTop: 6, border: "none", background: "transparent", color: p.primary, cursor: "pointer", padding: 0, fontSize: 12, fontWeight: 600 }}>
+                {zh ? "查看 Bridge 说明 →" : "Bridge help →"}
               </button>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setModeInfo(false)}
-            aria-label="close"
-            style={{ border: "none", background: "transparent", cursor: "pointer", color: "inherit", padding: 0 }}
-          >
+          <button type="button" onClick={() => setModeInfo(false)} aria-label="close" style={{ border: "none", background: "transparent", cursor: "pointer", color: "inherit", padding: 0 }}>
             <Icon name="close" size={16} />
           </button>
         </div>
       )}
 
-      {/* device target */}
+      {/* apply mode — user chooses instant vs staged */}
       <div>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{zh ? "设备目标" : "Device"}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{zh ? "绘制方式" : "Apply mode"}</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {(
+            [
+              { key: "instant", label: zh ? "即时" : "Instant", blurb: zh ? "一次成稿" : "One shot" },
+              { key: "staged", label: zh ? "分步" : "Staged", blurb: zh ? "层层出现" : "Build up" },
+            ] as const
+          ).map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => {
+                onApplyMode(o.key);
+                saveApplyMode(o.key);
+              }}
+              style={{
+                flex: 1,
+                border: applyMode === o.key ? `2px solid ${p.primary}` : `1px solid ${p.outlineVariant}`,
+                borderRadius: 12,
+                padding: "8px 6px",
+                background: applyMode === o.key ? p.secondaryContainer : p.surfaceContainerLow,
+                color: applyMode === o.key ? p.onSecondaryContainer : p.onSurfaceVariant,
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              {o.label}
+              <div style={{ fontWeight: 400, fontSize: 10, opacity: 0.7 }}>{o.blurb}</div>
+            </button>
+          ))}
+        </div>
+        <p style={{ margin: "6px 0 0", fontSize: 11, opacity: 0.5 }}>
+          {zh ? "影响 AI / Bridge 推入整页时的呈现节奏；区域修改始终即时。" : "Applies to full-page AI/Bridge pushes. Region edits stay instant."}
+        </p>
+      </div>
+
+      <div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{zh ? "设备目标" : "Device"}</div>
+        </div>
         <div style={{ display: "flex", gap: 6 }}>
           {DEVICE_OPTIONS.map((d) => (
             <button
               key={d.key}
               type="button"
               onClick={() => setDevice(d.key)}
-              className="m3-press"
               style={{
                 flex: 1,
                 border: device === d.key ? `2px solid ${p.primary}` : `1px solid ${p.outlineVariant}`,
                 borderRadius: 12,
-                padding: "8px 6px",
+                padding: "6px 4px",
                 background: device === d.key ? p.secondaryContainer : p.surfaceContainerLow,
                 color: device === d.key ? p.onSecondaryContainer : p.onSurface,
                 cursor: "pointer",
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 600,
               }}
             >
               {d.label}
-              <div style={{ fontWeight: 400, fontSize: 10, opacity: 0.7 }}>{d.blurb}</div>
             </button>
           ))}
         </div>
-        <p style={{ margin: "6px 0 0", fontSize: 11, opacity: 0.55 }}>
-          {zh
-            ? "画布本身已支持手机 412×892 与桌面 1280×800；生成时按目标铺屏。"
-            : "Canvas already supports phone 412×892 and desktop 1280×800 frames."}
-        </p>
       </div>
 
-      {/* presets */}
       <div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <div style={{ fontSize: 13, fontWeight: 600 }}>{zh ? "风格预设" : "Styles"}</div>
           <div style={{ display: "flex", gap: 4 }}>
-            <button type="button" onClick={saveCurrent} title={zh ? "把当前主题存为预设" : "Save current theme"} style={miniBtn(p)}>
+            <button type="button" onClick={saveCurrent} style={miniBtn(p)}>
               {zh ? "存为预设" : "Save"}
             </button>
             <button type="button" onClick={() => fileRef.current?.click()} style={miniBtn(p)}>
@@ -258,17 +340,7 @@ export function AiStudio({
             </button>
           </div>
         </div>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json,.json"
-          hidden
-          onChange={(e) => {
-            const f = e.target.files?.[0] ?? null;
-            e.target.value = "";
-            void onImportFile(f);
-          }}
-        />
+        <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0] ?? null; e.target.value = ""; void onImportFile(f); }} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {presets.map((s) => {
             const on = s.id === styleId;
@@ -278,7 +350,6 @@ export function AiStudio({
                 <button
                   type="button"
                   onClick={() => applyPreset(s)}
-                  className="m3-press"
                   style={{
                     width: "100%",
                     border: on ? `2px solid ${p.primary}` : `1px solid ${p.outlineVariant}`,
@@ -293,45 +364,17 @@ export function AiStudio({
                     gap: 6,
                   }}
                 >
-                  <div
-                    style={{
-                      height: 36,
-                      borderRadius: 10,
-                      background: s.swatch,
-                      color: s.ink,
-                      display: "grid",
-                      placeItems: "center",
-                      fontSize: 10,
-                      fontWeight: 700,
-                    }}
-                  >
+                  <div style={{ height: 32, borderRadius: 8, background: s.swatch, color: s.ink, display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700 }}>
                     {s.label.slice(0, 4)}
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>
-                    {custom ? "★ " : ""}
-                    {s.label}
-                  </div>
-                  <div style={{ fontSize: 10, opacity: 0.65 }}>{s.blurb}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{custom ? "★ " : ""}{s.label}</div>
                 </button>
                 {custom && (
                   <button
                     type="button"
-                    title={zh ? "删除预设" : "Delete"}
+                    title={zh ? "删除" : "Delete"}
                     onClick={() => setUserPresets(removeUserPreset(s.id))}
-                    style={{
-                      position: "absolute",
-                      top: 4,
-                      right: 4,
-                      width: 22,
-                      height: 22,
-                      borderRadius: 11,
-                      border: "none",
-                      background: "rgba(0,0,0,0.35)",
-                      color: "#fff",
-                      cursor: "pointer",
-                      display: "grid",
-                      placeItems: "center",
-                    }}
+                    style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: 11, border: "none", background: "rgba(0,0,0,0.35)", color: "#fff", cursor: "pointer", display: "grid", placeItems: "center" }}
                   >
                     <Icon name="close" size={12} />
                   </button>
@@ -340,30 +383,67 @@ export function AiStudio({
             );
           })}
         </div>
-        <p style={{ margin: "6px 0 0", fontSize: 11, opacity: 0.5 }}>
-          {zh ? "点击预设立刻套用（改色板+主题，无模型调用）。" : "Click applies instantly (palette + theme, no model call)."}
-        </p>
       </div>
 
       <div style={{ height: 1, background: p.outlineVariant, opacity: 0.6 }} />
 
-      <div style={{ fontSize: 13, fontWeight: 600 }}>{zh ? "和 AI 说想法" : "Chat with AI"}</div>
-      <div
-        ref={listRef}
-        style={{
-          minHeight: 100,
-          maxHeight: 180,
-          overflow: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
-      >
+      {/* region edit */}
+      <section style={{ border: `1px solid ${p.outlineVariant}`, borderRadius: 14, padding: 10, background: p.surfaceContainerLow }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+          {zh ? "区域修改" : "Region edit"}
+        </div>
+        <p style={{ margin: "0 0 8px", fontSize: 11, opacity: 0.6, lineHeight: 1.4 }}>
+          {selectedPart
+            ? zh
+              ? `已选中：${selectedPart.kind} · 「${selectedPart.label || "无标题"}」`
+              : `Selected: ${selectedPart.kind} · “${selectedPart.label || "untitled"}”`
+            : zh
+              ? "在画布上点选一个部件后，可只改这一处。"
+              : "Select a part on the canvas to edit only that piece."}
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <textarea
+            value={regionInput}
+            onChange={(e) => setRegionInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void sendRegion();
+              }
+            }}
+            rows={2}
+            disabled={!selectedPart}
+            placeholder={zh ? "例如：改成已完成、副标题写时长、图标换 check…" : "e.g. mark done, supporting with duration…"}
+            style={{
+              width: "100%",
+              minHeight: 48,
+              padding: "8px 10px",
+              borderRadius: 10,
+              border: `1px solid ${p.outlineVariant}`,
+              background: p.surface,
+              color: p.onSurface,
+              fontSize: 12,
+              fontFamily: "inherit",
+              resize: "vertical",
+              boxSizing: "border-box",
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button type="button" disabled={!selectedPart || !regionInput.trim() || regionBusy} onClick={() => void sendRegion()} style={btn(true)}>
+              {regionBusy ? (zh ? "修改中…" : "Working…") : zh ? "只改这一处" : "Edit this part"}
+            </button>
+            {!readyLocal && <span style={{ fontSize: 11, opacity: 0.6 }}>{zh ? "需 API Key" : "API key"}</span>}
+          </div>
+        </div>
+      </section>
+
+      <div style={{ height: 1, background: p.outlineVariant, opacity: 0.6 }} />
+
+      <div style={{ fontSize: 13, fontWeight: 600 }}>{zh ? "和 AI 说想法（整页）" : "Chat AI (whole page)"}</div>
+      <div ref={listRef} style={{ minHeight: 80, maxHeight: 140, overflow: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
         {messages.length === 0 ? (
           <p style={{ margin: 0, fontSize: 12, opacity: 0.55, lineHeight: 1.5 }}>
-            {zh
-              ? "例如：做一个音乐播放器。选风格与设备后生成；或由外部 MCP 用 prism_apply_design 改画布。"
-              : "e.g. A music player. Pick style + device, then generate — or let MCP edit via prism_apply_design."}
+            {zh ? "选风格与设备后生成整页；或先选中部件用「区域修改」。" : "Pick style + device for a full page; or select a part for region edit."}
           </p>
         ) : (
           messages.map((m) => (
@@ -385,14 +465,7 @@ export function AiStudio({
             </div>
           ))
         )}
-        {busy && (
-          <div style={{ fontSize: 12, opacity: 0.6, display: "flex", alignItems: "center", gap: 6 }}>
-            <Icon name="progress_activity" size={16} />
-            {zh ? "生成中…" : "Generating…"}
-          </div>
-        )}
       </div>
-
       <textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
@@ -403,10 +476,10 @@ export function AiStudio({
           }
         }}
         rows={2}
-        placeholder={zh ? "描述界面想法，Enter 发送…" : "Describe the UI, Enter…"}
+        placeholder={zh ? "描述整页想法，Enter 生成…" : "Describe the whole page, Enter…"}
         style={{
           width: "100%",
-          minHeight: 56,
+          minHeight: 48,
           padding: "10px 12px",
           borderRadius: 12,
           border: `1px solid ${p.outlineVariant}`,
@@ -419,18 +492,10 @@ export function AiStudio({
           resize: "vertical",
         }}
       />
-      <AiWriteBtn
-        p={p}
-        busy={busy}
-        disabled={!input.trim() && !busy}
-        onClick={send}
-        onCancel={() => {}}
-        label={zh ? "生成设计" : "Generate"}
-        title={zh ? "本机 API 生成" : "Draft with local API"}
-      />
+      <AiWriteBtn p={p} busy={busy} disabled={!input.trim() && !busy} onClick={send} onCancel={() => {}} label={zh ? "生成整页" : "Draft page"} title={zh ? "本机 API 生成整页" : "Draft full page"} />
       {!readyLocal && (
         <p style={{ margin: 0, fontSize: 11, opacity: 0.6 }}>
-          {zh ? "面板生成需 API Key；外部 MCP 仍可通过 Bridge 改画布。" : "Panel draft needs API key; MCP can still edit via Bridge."}
+          {zh ? "面板生成需 API Key；外部 MCP 仍可通过 Bridge 改画布。" : "Panel draft needs API key; MCP still works via Bridge."}
         </p>
       )}
     </div>

@@ -1,0 +1,274 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e30]
+  - generic [ref=e38]:
+    - complementary [ref=e39]:
+      - generic [ref=e40]:
+        - button "组件" [ref=e46] [cursor=pointer]:
+          - generic [ref=e47]: add_box
+        - button "图层" [ref=e49] [cursor=pointer]:
+          - generic [ref=e50]: layers
+        - button "配色" [ref=e52] [cursor=pointer]:
+          - generic [ref=e53]: palette
+        - button "形状" [ref=e55] [cursor=pointer]:
+          - generic [ref=e56]: rounded_corner
+        - button "字体" [ref=e58] [cursor=pointer]:
+          - generic [ref=e59]: text_fields
+        - button "动效" [ref=e61] [cursor=pointer]:
+          - generic [ref=e62]: animation
+        - button "AI" [ref=e64] [cursor=pointer]:
+          - generic [ref=e65]: auto_awesome
+        - button "语言" [ref=e67] [cursor=pointer]:
+          - generic [ref=e68]: translate
+        - link "GitHub" [ref=e69] [cursor=pointer]:
+          - /url: https://github.com/huankun05/Prism
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]: 组件
+          - button "关闭面板" [ref=e75] [cursor=pointer]:
+            - generic [ref=e76]: left_panel_close
+        - generic [ref=e78]:
+          - generic [ref=e80]:
+            - generic: search
+            - textbox "搜索" [ref=e81]
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - button "touch_app 操作 expand_less" [expanded] [ref=e85] [cursor=pointer]:
+                - generic [ref=e86]: touch_app
+                - generic [ref=e87]: 操作
+                - generic [ref=e88]: expand_less
+              - generic [ref=e90]:
+                - generic "按钮" [ref=e91]:
+                  - generic [ref=e92]: buttons_alt
+                  - button "添加到收藏" [ref=e94] [cursor=pointer]:
+                    - generic [ref=e95]: star
+                - generic "图标按钮" [ref=e96]:
+                  - generic [ref=e97]: radio_button_checked
+                  - button "添加到收藏" [ref=e99] [cursor=pointer]:
+                    - generic [ref=e100]: star
+                - generic "FAB（悬浮按钮）" [ref=e101]:
+                  - generic [ref=e102]: add_circle
+                  - button "添加到收藏" [ref=e104] [cursor=pointer]:
+                    - generic [ref=e105]: star
+                - generic "扩展 FAB" [ref=e106]:
+                  - generic [ref=e107]: add_box
+                  - button "添加到收藏" [ref=e109] [cursor=pointer]:
+                    - generic [ref=e110]: star
+                - generic "拆分按钮" [ref=e111]:
+                  - generic [ref=e112]: splitscreen_right
+                  - button "添加到收藏" [ref=e114] [cursor=pointer]:
+                    - generic [ref=e115]: star
+                - generic "FAB 菜单" [ref=e116]:
+                  - generic [ref=e117]: add_circle
+                  - button "添加到收藏" [ref=e119] [cursor=pointer]:
+                    - generic [ref=e120]: star
+                - generic "标签片" [ref=e121]:
+                  - generic [ref=e122]: label
+                  - button "添加到收藏" [ref=e124] [cursor=pointer]:
+                    - generic [ref=e125]: star
+            - generic [ref=e126]:
+              - button "explore 导航 expand_less" [expanded] [ref=e128] [cursor=pointer]:
+                - generic [ref=e129]: explore
+                - generic [ref=e130]: 导航
+                - generic [ref=e131]: expand_less
+              - generic [ref=e133]:
+                - generic "顶部应用栏" [ref=e134]:
+                  - generic [ref=e135]: toolbar
+                  - button "添加到收藏" [ref=e137] [cursor=pointer]:
+                    - generic [ref=e138]: star
+                - generic "导航栏" [ref=e139]:
+                  - generic [ref=e140]: bottom_navigation
+                  - button "添加到收藏" [ref=e142] [cursor=pointer]:
+                    - generic [ref=e143]: star
+                - generic "侧边导航栏" [ref=e144]:
+                  - generic [ref=e145]: side_navigation
+                  - button "添加到收藏" [ref=e147] [cursor=pointer]:
+                    - generic [ref=e148]: star
+                - generic "工具栏" [ref=e149]:
+                  - generic [ref=e150]: toolbar
+                  - button "添加到收藏" [ref=e152] [cursor=pointer]:
+                    - generic [ref=e153]: star
+                - generic "标签页" [ref=e154]:
+                  - generic [ref=e155]: tab
+                  - button "添加到收藏" [ref=e157] [cursor=pointer]:
+                    - generic [ref=e158]: star
+                - generic "搜索栏" [ref=e159]:
+                  - generic [ref=e160]: search
+                  - button "添加到收藏" [ref=e162] [cursor=pointer]:
+                    - generic [ref=e163]: star
+            - generic [ref=e164]:
+              - button "web_asset 容器 expand_less" [expanded] [ref=e166] [cursor=pointer]:
+                - generic [ref=e167]: web_asset
+                - generic [ref=e168]: 容器
+                - generic [ref=e169]: expand_less
+              - generic [ref=e171]:
+                - generic "卡片" [ref=e172]:
+                  - generic [ref=e173]: web_asset
+                  - button "添加到收藏" [ref=e175] [cursor=pointer]:
+                    - generic [ref=e176]: star
+                - generic "列表项" [ref=e177]:
+                  - generic [ref=e178]: list
+                  - button "添加到收藏" [ref=e180] [cursor=pointer]:
+                    - generic [ref=e181]: star
+                - generic "容器框" [ref=e182]:
+                  - generic [ref=e183]: check_box_outline_blank
+                  - button "添加到收藏" [ref=e185] [cursor=pointer]:
+                    - generic [ref=e186]: star
+                - generic "对话框" [ref=e187]:
+                  - generic [ref=e188]: chat_bubble
+                  - button "添加到收藏" [ref=e190] [cursor=pointer]:
+                    - generic [ref=e191]: star
+                - generic "消息条" [ref=e192]:
+                  - generic [ref=e193]: call_to_action
+                  - button "添加到收藏" [ref=e195] [cursor=pointer]:
+                    - generic [ref=e196]: star
+            - generic [ref=e197]:
+              - button "toggle_on 输入 expand_less" [expanded] [ref=e199] [cursor=pointer]:
+                - generic [ref=e200]: toggle_on
+                - generic [ref=e201]: 输入
+                - generic [ref=e202]: expand_less
+              - generic [ref=e204]:
+                - generic "文本输入框" [ref=e205]:
+                  - generic [ref=e206]: text_fields
+                  - button "添加到收藏" [ref=e208] [cursor=pointer]:
+                    - generic [ref=e209]: star
+                - generic "下拉菜单" [ref=e210]:
+                  - generic [ref=e211]: arrow_drop_down_circle
+                  - button "添加到收藏" [ref=e213] [cursor=pointer]:
+                    - generic [ref=e214]: star
+                - generic "开关" [ref=e215]:
+                  - generic [ref=e216]: toggle_on
+                  - button "添加到收藏" [ref=e218] [cursor=pointer]:
+                    - generic [ref=e219]: star
+                - generic "复选框" [ref=e220]:
+                  - generic [ref=e221]: check_box
+                  - button "添加到收藏" [ref=e223] [cursor=pointer]:
+                    - generic [ref=e224]: star
+                - generic "单选按钮" [ref=e225]:
+                  - generic [ref=e226]: radio_button_checked
+                  - button "添加到收藏" [ref=e228] [cursor=pointer]:
+                    - generic [ref=e229]: star
+                - generic "滑块" [ref=e230]:
+                  - generic [ref=e231]: sliders
+                  - button "添加到收藏" [ref=e233] [cursor=pointer]:
+                    - generic [ref=e234]: star
+            - generic [ref=e235]:
+              - button "notes 内容 expand_less" [expanded] [ref=e237] [cursor=pointer]:
+                - generic [ref=e238]: notes
+                - generic [ref=e239]: 内容
+                - generic [ref=e240]: expand_less
+              - generic [ref=e242]:
+                - generic "文本" [ref=e243]:
+                  - generic [ref=e244]: title
+                  - button "添加到收藏" [ref=e246] [cursor=pointer]:
+                    - generic [ref=e247]: star
+                - generic "图片" [ref=e248]:
+                  - generic [ref=e249]: image
+                  - button "添加到收藏" [ref=e251] [cursor=pointer]:
+                    - generic [ref=e252]: star
+                - generic "相机" [ref=e253]:
+                  - generic [ref=e254]: photo_camera
+                  - button "添加到收藏" [ref=e256] [cursor=pointer]:
+                    - generic [ref=e257]: star
+                - generic "地图" [ref=e258]:
+                  - generic [ref=e259]: map
+                  - button "添加到收藏" [ref=e261] [cursor=pointer]:
+                    - generic [ref=e262]: star
+                - generic "徽标" [ref=e263]:
+                  - generic [ref=e264]: notifications_unread
+                  - button "添加到收藏" [ref=e266] [cursor=pointer]:
+                    - generic [ref=e267]: star
+                - generic "分割线" [ref=e268]:
+                  - generic [ref=e269]: horizontal_rule
+                  - button "添加到收藏" [ref=e271] [cursor=pointer]:
+                    - generic [ref=e272]: star
+            - generic [ref=e273]:
+              - button "progress_activity 进度 expand_less" [expanded] [ref=e275] [cursor=pointer]:
+                - generic [ref=e276]: progress_activity
+                - generic [ref=e277]: 进度
+                - generic [ref=e278]: expand_less
+              - generic [ref=e280]:
+                - generic "加载指示器" [ref=e281]:
+                  - generic [ref=e282]: motion_blur
+                  - button "添加到收藏" [ref=e284] [cursor=pointer]:
+                    - generic [ref=e285]: star
+                - generic "线性进度条" [ref=e286]:
+                  - generic [ref=e287]: linear_scale
+                  - button "添加到收藏" [ref=e289] [cursor=pointer]:
+                    - generic [ref=e290]: star
+                - generic "圆形进度条" [ref=e291]:
+                  - generic [ref=e292]: progress_activity
+                  - button "添加到收藏" [ref=e294] [cursor=pointer]:
+                    - generic [ref=e295]: star
+    - main [ref=e297]:
+      - generic [ref=e298]:
+        - generic:
+          - generic:
+            - generic [ref=e299]:
+              - generic [ref=e301]:
+                - button "手机" [ref=e302] [cursor=pointer]:
+                  - generic [ref=e303]: smartphone
+                - button "平板" [ref=e304] [cursor=pointer]:
+                  - generic [ref=e305]: tablet_mac
+                - button "桌面" [ref=e306] [cursor=pointer]:
+                  - generic [ref=e307]: desktop_windows
+              - text: 首页
+            - generic [ref=e310]:
+              - generic [ref=e312]:
+                - generic [ref=e313]: person
+                - generic [ref=e315]:
+                  - generic [ref=e316]: 开始使用
+                  - generic [ref=e317]: 辅助文本
+                - generic [ref=e318]: chevron_right
+              - generic [ref=e320]:
+                - generic [ref=e321]: person
+                - generic [ref=e323]:
+                  - generic [ref=e324]: 了解功能
+                  - generic [ref=e325]: 辅助文本
+                - generic [ref=e326]: chevron_right
+      - generic [ref=e328]:
+        - button "缩小 (-)" [ref=e329] [cursor=pointer]:
+          - generic [ref=e330]: remove
+        - button "61%" [ref=e331] [cursor=pointer]
+        - button "放大 (+)" [ref=e332] [cursor=pointer]:
+          - generic [ref=e333]: add
+        - button "适应窗口 (0)" [ref=e334] [cursor=pointer]:
+          - generic [ref=e335]: fit_screen
+      - button "让 AI 来画 BETA" [ref=e337] [cursor=pointer]:
+        - text: 让 AI 来画
+        - generic [ref=e338]: BETA
+      - generic:
+        - generic [ref=e340]:
+          - button "选择 (V)" [ref=e341] [cursor=pointer]:
+            - generic [ref=e342]: arrow_selector_tool
+          - button "抓手 (H / Space)" [ref=e343] [cursor=pointer]:
+            - generic [ref=e344]: pan_tool
+        - generic [ref=e345]:
+          - button "添加屏幕" [ref=e346] [cursor=pointer]:
+            - generic [ref=e347]: add_to_photos
+          - button "预览 (P)" [ref=e348] [cursor=pointer]:
+            - generic [ref=e349]: play_arrow
+        - generic [ref=e350]:
+          - button "撤销 (Ctrl+Z)" [disabled] [ref=e351]:
+            - generic [ref=e352]: undo
+          - button "重做 (Ctrl+Shift+Z)" [disabled] [ref=e353]:
+            - generic [ref=e354]: redo
+          - button "全部清除" [ref=e355] [cursor=pointer]:
+            - generic [ref=e356]: delete_sweep
+          - button "项目" [ref=e358] [cursor=pointer]:
+            - generic [ref=e359]: folder_open
+    - complementary [ref=e360]:
+      - generic [ref=e362]:
+        - generic [ref=e364]:
+          - button "编辑" [ref=e365] [cursor=pointer]:
+            - generic [ref=e366]: tune
+          - button "提示词" [ref=e367] [cursor=pointer]:
+            - generic [ref=e368]: auto_awesome
+        - button "关闭面板" [ref=e370] [cursor=pointer]:
+          - generic [ref=e371]: right_panel_close
+      - generic [ref=e372]: ads_click
+    - generic [ref=e375]:
+      - button "arrow_back 项目库" [ref=e376] [cursor=pointer]:
+        - generic [ref=e377]: arrow_back
+        - text: 项目库
+      - generic [ref=e378]: 已保存
+      - generic "本地 Bridge 未连接（node prism-bridge/server.mjs）" [ref=e379]: Bridge

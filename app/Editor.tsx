@@ -3725,6 +3725,11 @@ export default function Editor({
                           "cable",
                         )
                       }
+                      onOpenSettings={() => {
+                        /* jump to model settings below studio */
+                        const el = document.getElementById("prism-model-settings");
+                        el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                      }}
                       onApplyStyle={(s) => {
                         setPaletteKey(s.paletteKey);
                         patchTheme({
@@ -3750,7 +3755,7 @@ export default function Editor({
                         showToast(lang === "zh" ? `已保存我的样式「${style.name}」` : `Saved my style “${style.name}”`, 1800, "check")
                       }
                     />
-                    <details style={{ fontSize: 12 }}>
+                    <details id="prism-model-settings" style={{ fontSize: 12 }}>
                       <summary style={{ cursor: "pointer", opacity: 0.7, padding: "4px 0" }}>
                         {lang === "zh" ? "模型设置" : "Model settings"}
                       </summary>

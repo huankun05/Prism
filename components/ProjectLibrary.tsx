@@ -30,7 +30,8 @@ import {
 } from "@/lib/storage/fallback";
 import { clearLegacyDraftFlag, hasLegacyDraft, readLegacyDraft } from "@/lib/storage/migrate";
 import { applyPersonalStyleToDoc, loadPersonalStyle, type PersonalStyle } from "@/lib/personalStyle";
-import { ConfirmDialog, IconBtn } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui";
+import { Icon } from "./M3Node";
 
 export type LibraryExit =
   | { kind: "fsa"; root: DirHandleLike; folderName: string; doc: Doc }
@@ -79,14 +80,31 @@ function formatDate(ts: number, lang: string): string {
 function btnStyle(primary: boolean): CSSProperties {
   return {
     appearance: "none",
-    border: "none",
+    border: primary ? "none" : "1px solid #E5E5EA",
     cursor: "pointer",
-    padding: "10px 18px",
-    borderRadius: 999,
-    fontSize: 14,
-    fontWeight: 500,
-    background: primary ? "#6750A4" : "#E8E0F0",
-    color: primary ? "#fff" : "#4A4459",
+    padding: "7px 14px",
+    borderRadius: 8,
+    fontSize: 13,
+    fontWeight: 600,
+    background: primary ? "#5B4CD8" : "#FFFFFF",
+    color: primary ? "#fff" : "#111114",
+    boxShadow: primary ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
+  };
+}
+
+function iconBtnStyle(): CSSProperties {
+  return {
+    appearance: "none",
+    border: "1px solid transparent",
+    background: "transparent",
+    cursor: "pointer",
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    display: "grid",
+    placeItems: "center",
+    color: "#6B6B76",
+    padding: 0,
   };
 }
 
@@ -391,137 +409,116 @@ export function ProjectLibrary({
         position: "fixed",
         inset: 0,
         overflow: "auto",
-        background:
-          "radial-gradient(1200px 600px at 10% -10%, rgba(103,80,164,0.18), transparent 55%), radial-gradient(900px 500px at 100% 0%, rgba(29,78,216,0.14), transparent 50%), #f7f5fb",
-        fontFamily: "Roboto, system-ui, sans-serif",
-        color: "#1c1b1f",
+        background: "#F7F7F9",
+        fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+        color: "#111114",
       }}
     >
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 88px", boxSizing: "border-box" }}>
-        <header
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 16,
-            flexWrap: "wrap",
-            padding: 20,
-            borderRadius: 24,
-            background: "rgba(255,255,255,0.72)",
-            border: "1px solid rgba(255,255,255,0.9)",
-            boxShadow: "0 10px 40px rgba(60,40,120,0.08)",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  background: "linear-gradient(135deg,#6750A4,#1B57C9)",
-                  color: "#fff",
-                  display: "grid",
-                  placeItems: "center",
-                  fontWeight: 700,
-                  fontSize: 18,
-                  boxShadow: "0 8px 20px rgba(103,80,164,0.35)",
-                }}
-              >
-                P
-              </span>
-              <div>
-                <h1 style={{ margin: 0, fontSize: 26, fontWeight: 650, letterSpacing: -0.3 }}>Prism</h1>
-                <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>{text.subtitle}</p>
-              </div>
-            </div>
-            <h2 style={{ margin: "18px 0 0", fontSize: 18, fontWeight: 600 }}>{text.title}</h2>
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            {supportsDirectoryPicker() && (
-              <button type="button" onClick={() => void onPickWorkspace()} disabled={busy} style={btnStyle(false)}>
-                {mode === "fsa" ? text.changeWs : text.bind}
-              </button>
-            )}
-            <label style={{ ...btnStyle(false), cursor: "pointer" }}>
-              {text.importJson}
-              <input
-                type="file"
-                accept="application/json,.json"
-                hidden
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  e.target.value = "";
-                  void onImportFile(f);
-                }}
-              />
-            </label>
-            <button type="button" onClick={() => setCreating((c) => !c)} style={btnStyle(true)}>
-              {text.newProj}
-            </button>
-          </div>
-        </header>
-
-        <p style={{ marginTop: 12, fontSize: 12, opacity: 0.55, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <span>
-            {text.workspace}: {mode === "fsa" && root ? root.name : text.fallbackNote}
+      {/* top bar */}
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          height: 56,
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          padding: "0 24px",
+          background: "#FFFFFF",
+          borderBottom: "1px solid #E5E5EA",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <span
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: "#5B4CD8",
+              color: "#fff",
+              display: "grid",
+              placeItems: "center",
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            P
           </span>
+          <strong style={{ fontSize: 14, fontWeight: 650, letterSpacing: -0.2 }}>Prism</strong>
+          <span style={{ width: 1, height: 16, background: "#E5E5EA", margin: "0 4px" }} />
+          <span style={{ fontSize: 13, color: "#6B6B76", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {text.title}
+          </span>
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "nowrap" }}>
           <span
             title={
               bridgeStatus === "connected"
-                ? lang === "zh"
-                  ? "AI 可通过本地 Bridge 自动画图（无项目时会自动新建）"
-                  : "AI can draw via the local bridge (auto-creates a project if needed)"
-                : lang === "zh"
-                  ? "Bridge 未连接：请运行 node prism-bridge/server.mjs"
-                  : "Bridge offline: run node prism-bridge/server.mjs"
+                ? lang === "zh" ? "AI Bridge 已连接" : "Bridge connected"
+                : lang === "zh" ? "Bridge 未连接" : "Bridge offline"
             }
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              padding: "2px 8px",
-              borderRadius: 10,
-              background: "rgba(0,0,0,0.04)",
+              fontSize: 12,
+              color: "#6B6B76",
+              whiteSpace: "nowrap",
             }}
           >
             <span
               style={{
-                width: 8,
-                height: 8,
+                width: 7,
+                height: 7,
                 borderRadius: 4,
-                background: bridgeStatus === "connected" ? "#2E7D32" : bridgeStatus === "connecting" ? "#F9A825" : "#cac4d0",
+                background: bridgeStatus === "connected" ? "#12B76A" : bridgeStatus === "connecting" ? "#F5A524" : "#C7C7CC",
               }}
             />
             Bridge
           </span>
-        </p>
+          <span style={{ width: 1, height: 16, background: "#E5E5EA" }} />
+          <span style={{ fontSize: 12, color: "#6B6B76", whiteSpace: "nowrap", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>
+            {mode === "fsa" && root ? root.name : lang === "zh" ? "浏览器草稿" : "Browser drafts"}
+          </span>
+          {supportsDirectoryPicker() && (
+            <button type="button" onClick={() => void onPickWorkspace()} disabled={busy} style={btnStyle(false)}>
+              {mode === "fsa" ? text.changeWs : text.bind}
+            </button>
+          )}
+          <label style={{ ...btnStyle(false), cursor: "pointer", whiteSpace: "nowrap" }}>
+            {text.importJson}
+            <input
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                e.target.value = "";
+                void onImportFile(f);
+              }}
+            />
+          </label>
+          <button type="button" onClick={() => setCreating((c) => !c)} style={btnStyle(true)}>
+            {text.newProj}
+          </button>
+        </div>
+      </header>
 
-        {mode === "fallback" && (
-          <div
-            style={{
-              marginTop: 20,
-              padding: "12px 16px",
-              borderRadius: 12,
-              background: "rgba(103,80,164,0.08)",
-              border: "1px solid rgba(103,80,164,0.2)",
-              fontSize: 13,
-            }}
-          >
-            {text.noFs}
-          </div>
-        )}
-
+      <main style={{ maxWidth: 960, margin: "0 auto", padding: "28px 24px 80px", boxSizing: "border-box" }}>
         {error && (
           <div
             style={{
-              marginTop: 16,
+              marginBottom: 16,
               padding: "10px 14px",
-              borderRadius: 10,
-              background: "rgba(176,0,32,0.08)",
-              color: "#b3261e",
+              borderRadius: 8,
+              background: "#FEF3F2",
+              color: "#B42318",
               fontSize: 13,
+              border: "1px solid #FECDCA",
             }}
           >
             {error}
@@ -531,15 +528,15 @@ export function ProjectLibrary({
         {creating && (
           <div
             style={{
-              marginTop: 20,
-              padding: 16,
-              borderRadius: 16,
-              background: "#fff",
-              boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+              marginBottom: 20,
               display: "flex",
               gap: 8,
               flexWrap: "wrap",
               alignItems: "center",
+              padding: "10px 12px",
+              background: "#fff",
+              border: "1px solid #E5E5EA",
+              borderRadius: 10,
             }}
           >
             <input
@@ -548,20 +545,23 @@ export function ProjectLibrary({
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") void onCreate();
+                if (e.key === "Escape") setCreating(false);
               }}
               placeholder={text.newProj}
               style={{
                 flex: "1 1 200px",
-                padding: "10px 14px",
-                borderRadius: 10,
-                border: "1px solid #cac4d0",
-                fontSize: 15,
+                padding: "8px 10px",
+                borderRadius: 8,
+                border: "1px solid #E5E5EA",
+                fontSize: 14,
+                outline: "none",
+                background: "#fff",
               }}
             />
             {personal && (
-              <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, opacity: 0.8 }}>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6B6B76" }}>
                 <input type="checkbox" checked={useMyStyle} onChange={(e) => setUseMyStyle(e.target.checked)} />
-                {lang === "zh" ? `用我的样式（${personal.name}）` : `Use my style (${personal.name})`}
+                {lang === "zh" ? `我的样式 · ${personal.name}` : `My style · ${personal.name}`}
               </label>
             )}
             <button type="button" disabled={busy} onClick={() => void onCreate()} style={btnStyle(true)}>
@@ -574,44 +574,42 @@ export function ProjectLibrary({
         )}
 
         {loading ? (
-          <p style={{ marginTop: 40, opacity: 0.6 }}>…</p>
+          <div style={{ marginTop: 48, textAlign: "center", color: "#6B6B76", fontSize: 13 }}>…</div>
         ) : items.length === 0 ? (
-          <div
-            style={{
-              marginTop: 40,
-              textAlign: "center",
-              padding: "56px 28px",
-              borderRadius: 28,
-              border: "1px dashed #c4b5e0",
-              background: "linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.55))",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
-            }}
-          >
+          <div style={{ marginTop: 72, textAlign: "center" }}>
             <div
               style={{
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 margin: "0 auto 16px",
-                borderRadius: 18,
-                background: "linear-gradient(135deg,#EADDFF,#D3E4FF)",
+                borderRadius: 12,
+                background: "#EEE9FB",
                 display: "grid",
                 placeItems: "center",
               }}
             >
-              <span style={{ fontSize: 24 }}>✦</span>
+              <Icon name="dashboard" size={24} color="#5B4CD8" />
             </div>
-            <p style={{ margin: 0, fontSize: 16, fontWeight: 500, opacity: 0.75 }}>{text.empty}</p>
-            <p style={{ margin: "8px 0 0", fontSize: 13, opacity: 0.5 }}>
-              {lang === "zh" ? "新建项目，或让 AI 从左侧工作台直接画一版" : "Create a project, or let AI draft from the studio"}
+            <p style={{ margin: "0 0 8px", fontSize: 15, fontWeight: 600, color: "#111114" }}>
+              {lang === "zh" ? "还没有设计项目" : "No designs yet"}
             </p>
+            <p style={{ margin: "0 0 20px", fontSize: 13, color: "#6B6B76" }}>
+              {text.empty}
+            </p>
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              style={{ ...btnStyle(true), padding: "9px 18px", fontSize: 13 }}
+            >
+              {text.newProj}
+            </button>
           </div>
         ) : (
           <div
             style={{
-              marginTop: 24,
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-              gap: 16,
+              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+              gap: 12,
             }}
           >
             {items.map((item) => (
@@ -619,63 +617,75 @@ export function ProjectLibrary({
                 key={item.folderName}
                 style={{
                   background: "#fff",
-                  borderRadius: 20,
-                  padding: 18,
-                  boxShadow: "0 6px 24px rgba(40,20,80,0.07)",
-                  border: "1px solid rgba(0,0,0,0.04)",
+                  borderRadius: 12,
+                  padding: 14,
+                  border: "1px solid #E5E5EA",
                   opacity: item.readable ? 1 : 0.55,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 10,
-                  transition: "transform 120ms, box-shadow 120ms",
+                  gap: 8,
+                  transition: "border-color 120ms, box-shadow 120ms",
+                  cursor: item.readable ? "pointer" : "default",
                 }}
+                onClick={() => item.readable && void onOpenItem(item)}
               >
-                <button
-                  type="button"
-                  onClick={() => void onOpenItem(item)}
-                  disabled={!item.readable}
+                <div
                   style={{
-                    all: "unset",
-                    cursor: item.readable ? "pointer" : "not-allowed",
-                    display: "block",
+                    height: 4,
+                    width: 32,
+                    borderRadius: 2,
+                    background: "linear-gradient(90deg,#5B4CD8,#1B57C9)",
+                    marginBottom: 4,
                   }}
-                >
-                  <strong style={{ fontSize: 16, display: "block" }}>{item.name}</strong>
-                  <span style={{ fontSize: 12, opacity: 0.55 }}>{formatDate(item.updatedAt, locale)}</span>
-                  {item.note ? (
-                    <span style={{ display: "block", marginTop: 6, fontSize: 13, opacity: 0.75 }}>{item.note}</span>
-                  ) : null}
-                  {!item.readable && item.error ? (
-                    <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "#b3261e" }}>
-                      {item.error === "missing-design" ? text.missing : text.invalid}
-                    </span>
-                  ) : null}
-                </button>
-                <div style={{ display: "flex", gap: 4, marginTop: "auto" }}>
-                  <IconBtn
-                    p={p0}
-                    icon="edit"
-                    title={text.rename}
-                    fill
-                    onClick={() => {
-                      setRenameValue(item.name);
-                      setCardAction({ type: "rename", item });
+                />
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6 }}>
+                  <strong
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      lineHeight: 1.3,
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
-                  />
-                  <IconBtn
-                    p={p0}
-                    icon="delete"
-                    title={text.delete}
-                    danger
-                    fill
-                    onClick={() => setCardAction({ type: "delete", item })}
-                  />
+                  >
+                    {item.name}
+                  </strong>
+                  <div style={{ display: "flex", gap: 0, flex: "0 0 auto" }} onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      title={text.rename}
+                      style={iconBtnStyle()}
+                      onClick={() => {
+                        setRenameValue(item.name);
+                        setCardAction({ type: "rename", item });
+                      }}
+                    >
+                      <Icon name="edit" size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      title={text.delete}
+                      style={{ ...iconBtnStyle(), color: "#D92D20" }}
+                      onClick={() => setCardAction({ type: "delete", item })}
+                    >
+                      <Icon name="delete_outline" size={16} />
+                    </button>
+                  </div>
                 </div>
+                <span style={{ fontSize: 12, color: "#6B6B76" }}>{formatDate(item.updatedAt, locale)}</span>
+                {!item.readable && item.error ? (
+                  <span style={{ fontSize: 12, color: "#B42318" }}>
+                    {item.error === "missing-design" ? text.missing : text.invalid}
+                  </span>
+                ) : null}
               </article>
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       {showLegacy && p0 && (
         <ConfirmDialog
@@ -718,13 +728,14 @@ export function ProjectLibrary({
             onClick={(e) => e.stopPropagation()}
             style={{
               background: "#fff",
-              borderRadius: 16,
+              borderRadius: 12,
               padding: 20,
               width: "min(360px, 100%)",
-              boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
+              boxShadow: "0 16px 48px rgba(0,0,0,0.16)",
+              border: "1px solid #E5E5EA",
             }}
           >
-            <h3 style={{ margin: "0 0 12px", fontSize: 18 }}>{text.rename}</h3>
+            <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 600 }}>{text.rename}</h3>
             <input
               autoFocus
               value={renameValue}
@@ -734,10 +745,12 @@ export function ProjectLibrary({
               }}
               style={{
                 width: "100%",
-                padding: "10px 12px",
+                padding: "8px 10px",
                 borderRadius: 8,
-                border: "1px solid #cac4d0",
-                fontSize: 15,
+                border: "1px solid #E5E5EA",
+                fontSize: 14,
+                outline: "none",
+                boxSizing: "border-box",
               }}
             />
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>

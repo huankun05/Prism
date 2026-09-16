@@ -397,7 +397,7 @@ export function ProjectLibrary({
         color: "#1c1b1f",
       }}
     >
-      <div style={{ maxWidth: 980, margin: "0 auto", padding: "40px 24px 88px" }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 88px", boxSizing: "border-box" }}>
         <header
           style={{
             display: "flex",

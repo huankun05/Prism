@@ -112,6 +112,7 @@ import { BottomSheet, MobileActionBar, MobileInspector, MobileLang, MobileSettin
 import { ConfirmDialog, IconBtn, Segmented } from "@/components/ui";
 import { Lang, LangContext, SEED_TEXT, getLang, setGlobalLang, t, translateDefaultFrameName, translateDefaultText } from "@/lib/i18n";
 import type { BridgeStatus } from "@/lib/bridge";
+import { CHROME } from "@/lib/chrome";
 
 /** the screens while a model drafts: primary, tertiary and primary container, drifting */
 const DRAFT_GRADIENT = (p: Palette) => `linear-gradient(120deg, ${p.primaryContainer}, ${p.tertiaryContainer}, ${p.primary}, ${p.secondaryContainer}, ${p.primaryContainer})`;
@@ -448,7 +449,7 @@ export default function Editor({
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
-  const [leftW, setLeftW] = useState(RAIL_W + 268);
+  const [leftW, setLeftW] = useState(CHROME.railW + CHROME.panelDefault);
   const [leftTab, setLeftTab] = useState<LeftTab>("parts");
   /** pointer over the collapsed rail: the logo becomes the open button */
   const [railHover, setRailHover] = useState(false);
@@ -3570,13 +3571,15 @@ export default function Editor({
               <GitHubLink p={ui} size={44} />
             </div>
             {leftOpen && (
-            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  padding: "10px 10px 0 14px",
+                  padding: "12px 12px 8px 16px",
+                  borderBottom: `1px solid ${ui.outlineVariant}`,
+                  flex: "0 0 auto",
                 }}
               >
                 <span
@@ -3585,6 +3588,7 @@ export default function Editor({
                     fontSize: 14,
                     color: ui.onSurface,
                     flex: 1,
+                    letterSpacing: 0.1,
                   }}
                 >
                   {t(LEFT_TABS.find((x) => x.key === leftTab)?.title ?? "parts", lang)}
@@ -3596,7 +3600,17 @@ export default function Editor({
                   title={t("closePanel", lang)}
                 />
               </div>
-              <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}>
+              <div
+                className="no-scrollbar"
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  padding: "12px 12px 24px",
+                  boxSizing: "border-box",
+                }}
+              >
                 {leftTab === "parts" ? (
                   <PartsPalette
                     palette={ui}
@@ -4301,7 +4315,9 @@ export default function Editor({
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                padding: "10px 10px 6px 12px",
+                padding: "12px 12px 8px 16px",
+                borderBottom: `1px solid ${ui.outlineVariant}`,
+                flex: "0 0 auto",
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -4312,18 +4328,21 @@ export default function Editor({
                   ]}
                   value={rightTab}
                   onChange={setRightTab}
-                  p={p}
+                  p={ui}
                   height={40}
                 />
               </div>
               <IconBtn
                 icon="right_panel_close"
-                p={p}
+                p={ui}
                 onClick={() => setRightOpen(false)}
                 title={t("closePanel", lang)}
               />
             </div>
-            <div style={{ flex: 1, minHeight: 0 }}>
+            <div
+              className="no-scrollbar"
+              style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: "8px 12px 24px", boxSizing: "border-box" }}
+            >
               {rightTab === "edit" && selectedFrame && !selected ? (
                 <FrameInspector
                   frame={selectedFrame}
@@ -4439,7 +4458,7 @@ export default function Editor({
             style={{
               position: "fixed",
               top: 12,
-              left: 12,
+              left: !isMobile && leftOpen ? leftW + 16 : 16,
               zIndex: 70,
               display: "flex",
               alignItems: "center",

@@ -215,7 +215,16 @@ export function AiStudio({
   });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%", minHeight: 0 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        height: "100%",
+        minHeight: 0,
+        boxSizing: "border-box",
+      }}
+    >
       {/* status strip */}
       <div
         style={{

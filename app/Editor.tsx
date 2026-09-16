@@ -86,7 +86,8 @@ import { Preview } from "@/components/Preview";
 import { Logo } from "@/components/Logo";
 import { PartsPalette } from "@/components/PartsPalette";
 import { PromptPanel } from "@/components/PromptPanel";
-import { GitHubLink, Mode, Toolbar } from "@/components/Toolbar";
+import { GitHubLink, Mode } from "@/components/Toolbar";
+import { AppTopBar } from "@/components/AppTopBar";
 import { LangMenu } from "@/components/Menus";
 import { AiActionKey, AiPanel, aiErrorText } from "@/components/AiPanel";
 import { AiStudio, loadApplyMode, type ApplyMode } from "@/components/AiStudio";
@@ -135,7 +136,7 @@ const OPEN = {
 const INSTANT = { duration: 0 };
 
 /** the icon rail on the left edge of the parts / layers panel */
-const RAIL_W = 52;
+const RAIL_W = 48;
 const MIN_Z = 0.25;
 const MAX_Z = 3;
 const HISTORY_MAX = 100;
@@ -449,7 +450,7 @@ export default function Editor({
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
-  const [leftW, setLeftW] = useState(CHROME.railW + CHROME.panelDefault);
+  const [leftW, setLeftW] = useState(48 + CHROME.panelDefault);
   const [leftTab, setLeftTab] = useState<LeftTab>("parts");
   /** pointer over the collapsed rail: the logo becomes the open button */
   const [railHover, setRailHover] = useState(false);
@@ -3357,7 +3358,8 @@ export default function Editor({
   const canvasBg = frame === "phone" ? p.surfaceContainerLow : "#ffffff";
 
   const panelStyle: React.CSSProperties = {
-    background: ui.surface,
+    background: "#FFFFFF",
+    borderRight: undefined,
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
@@ -3388,8 +3390,9 @@ export default function Editor({
         aria-hidden={editAccess !== "editable" || previewId !== null}
         style={{
           display: "flex",
+          flexDirection: "column",
           overflow: "hidden",
-          background: ui.surfaceContainer,
+          background: "#F0F0F4",
           cursor: resizing ? "col-resize" : undefined,
           userSelect: resizing ? "none" : undefined,
           ["--sb" as string]: ui.outlineVariant,
@@ -3438,6 +3441,64 @@ export default function Editor({
             {renderExport(exportFrame)}
           </div>
         )}
+
+        {!isMobile && (
+          <AppTopBar
+            p={ui}
+            mode={mode}
+            onMode={setMode}
+            frame={frame}
+            onFrame={changeFrame}
+            zoom={view.z}
+            onZoom={(z) => setZoomAt(z)}
+            onFit={fit}
+            canUndo={pastRef.current.length > 0}
+            canRedo={futureRef.current.length > 0}
+            onUndo={undo}
+            onRedo={redo}
+            onClear={() => {
+              if (groupsRef.current.length || framesRef.current.length) setConfirmClear(true);
+            }}
+            onAddFrame={addFrame}
+            onPreview={() => openPreview()}
+            tidy={selectedIds.length > 1 ? undefined : tidyState ?? undefined}
+            onTidy={tidyTarget ? () => tidy(tidyTarget) : undefined}
+            place={tidyTarget?.place}
+            onPlace={tidyTarget ? (pl) => setPlace(tidyTarget, pl) : undefined}
+            note={aiNote}
+            onSaveProject={() => saveProject(doc)}
+            onOpenProject={() => projectFileRef.current?.click()}
+            onShare={() => setShareOpen(true)}
+            shareState={draftBusy ? "busy" : draftBefore ? "review" : "idle"}
+            onDraftKeep={keepDraft}
+            onDraftUndo={undoDraft}
+            onDraftSave={() => saveProject(doc)}
+            quickUndo={quickUndo}
+            onExitLibrary={onExitLibrary}
+            projectTitle={title || undefined}
+            saveLabel={
+              saveStatus === "saving"
+                ? lang === "zh" ? "保存中" : "Saving"
+                : saveStatus === "error"
+                  ? lang === "zh" ? "保存失败" : "Save failed"
+                  : saveStatus === "saved"
+                    ? lang === "zh" ? "已保存" : "Saved"
+                    : undefined
+            }
+            saveTone={saveStatus}
+            bridgeConnected={bridgeStatus === "connected"}
+            onSettings={() => setSheet(sheet === "settings" ? null : "settings")}
+            onLangSheet={() => setSheet(sheet === "lang" ? null : "lang")}
+            onPrompt={async () => {
+              try {
+                await navigator.clipboard.writeText(effectivePrompt(doc, widths, lang));
+                showToast(t("copied", lang), 1400, "check");
+              } catch {}
+            }}
+          />
+        )}
+
+        <div style={{ flex: 1, display: "flex", minHeight: 0, minWidth: 0, position: "relative" }}>
 
 
         {/* the part in flight rides above every panel so it stays visible while crossing them */}
@@ -4122,48 +4183,49 @@ export default function Editor({
               </svg>
             </div>
           )}
-          <Toolbar
-            p={ui}
-            mode={mode}
-            onMode={setMode}
-            frame={frame}
-            onFrame={changeFrame}
-            zoom={view.z}
-            onZoom={(z) => setZoomAt(z)}
-            onFit={fit}
-            canUndo={pastRef.current.length > 0}
-            canRedo={futureRef.current.length > 0}
-            onUndo={undo}
-            onRedo={redo}
-            onClear={() => {
-              if (groupsRef.current.length || framesRef.current.length) setConfirmClear(true);
-            }}
-            onAddFrame={addFrame}
-            onPreview={() => openPreview()}
-            tidy={selectedIds.length > 1 ? undefined : tidyState ?? undefined}
-            onTidy={tidyTarget ? () => tidy(tidyTarget) : undefined}
-            place={tidyTarget?.place}
-            onPlace={tidyTarget ? (pl) => setPlace(tidyTarget, pl) : undefined}
-            note={aiNote}
-            onSaveProject={() => saveProject(doc)}
-            onOpenProject={() => projectFileRef.current?.click()}
-            onShare={!isMobile ? () => setShareOpen(true) : undefined}
-            shareState={draftBusy ? "busy" : draftBefore ? "review" : "idle"}
-            onDraftKeep={keepDraft}
-            onDraftUndo={undoDraft}
-            onDraftSave={() => saveProject(doc)}
-            quickUndo={quickUndo}
-            rightInset={showRight ? rightW : 0}
-            mobile={isMobile}
-            onSettings={() => setSheet(sheet === "settings" ? null : "settings")}
-            onLangSheet={() => setSheet(sheet === "lang" ? null : "lang")}
-            onPrompt={async () => {
-              try {
-                await navigator.clipboard.writeText(effectivePrompt(doc, widths, lang));
-                showToast(t("copied", lang), 1400, "check");
-              } catch {}
-            }}
-          />
+
+          {!isMobile && (
+            <div
+              style={{
+                position: "absolute",
+                right: 16 + (showRight ? rightW : 0),
+                bottom: 16,
+                zIndex: 40,
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                background: "#fff",
+                border: "1px solid #E5E5EA",
+                borderRadius: 10,
+                boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                padding: 4,
+              }}
+            >
+              <IconBtn icon="remove" p={ui} onClick={() => setZoomAt(view.z / 1.2)} title={t("zoomOut", lang)} size={28} />
+              <button
+                type="button"
+                onClick={fit}
+                title={t("fit", lang)}
+                className="m3-press"
+                style={{
+                  height: 28,
+                  minWidth: 48,
+                  borderRadius: 8,
+                  border: "none",
+                  background: "transparent",
+                  color: "#111114",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {Math.round(view.z * 100)}%
+              </button>
+              <IconBtn icon="add" p={ui} onClick={() => setZoomAt(view.z * 1.2)} title={t("zoomIn", lang)} size={28} />
+              <IconBtn icon="fit_screen" p={ui} onClick={fit} title={t("fit", lang)} size={28} />
+            </div>
+          )}
 
           {isMobile && (
             <div
@@ -4401,6 +4463,7 @@ export default function Editor({
             </div>
           </aside>
         )}
+        </div>
 
         <input
           ref={projectFileRef}
@@ -4452,107 +4515,6 @@ export default function Editor({
           onCancel={() => setConfirmClear(false)}
           onConfirm={clearAll}
         />
-
-        {onExitLibrary && (
-          <div
-            style={{
-              position: "fixed",
-              top: 12,
-              left: !isMobile && leftOpen ? leftW + 16 : 16,
-              zIndex: 70,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              pointerEvents: "auto",
-            }}
-          >
-            <button
-              type="button"
-              className="m3-press"
-              onClick={onExitLibrary}
-              title={lang === "zh" ? "返回项目库" : "Back to projects"}
-              style={{
-                height: 36,
-                padding: "0 14px",
-                borderRadius: 18,
-                border: "none",
-                background: ui.surfaceContainerLow,
-                color: ui.onSurfaceVariant,
-                boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
-                cursor: "pointer",
-                fontSize: 13,
-                fontWeight: 500,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <Icon name="arrow_back" size={18} fill />
-              {lang === "zh" ? "项目库" : "Projects"}
-            </button>
-            <span
-              aria-live="polite"
-              style={{
-                fontSize: 12,
-                color: saveStatus === "error" ? ui.error : ui.onSurfaceVariant,
-                opacity: saveStatus === "idle" ? 0.5 : 0.85,
-                background: ui.surfaceContainerLow,
-                borderRadius: 12,
-                padding: "6px 10px",
-              }}
-            >
-              {saveStatus === "saving"
-                ? lang === "zh"
-                  ? "保存中…"
-                  : "Saving…"
-                : saveStatus === "error"
-                  ? lang === "zh"
-                    ? "保存失败"
-                    : "Save failed"
-                  : saveStatus === "saved"
-                    ? lang === "zh"
-                      ? "已保存"
-                      : "Saved"
-                    : ""}
-            </span>
-            <span
-              title={
-                bridgeStatus === "connected"
-                  ? lang === "zh"
-                    ? "本地 Bridge 已连接（AI 可改画布）"
-                    : "Local bridge connected (AI can edit)"
-                  : lang === "zh"
-                    ? "本地 Bridge 未连接（node prism-bridge/server.mjs）"
-                    : "Bridge offline (node prism-bridge/server.mjs)"
-              }
-              style={{
-                fontSize: 12,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                background: ui.surfaceContainerLow,
-                borderRadius: 12,
-                padding: "6px 10px",
-                color: bridgeStatus === "connected" ? ui.primary : ui.onSurfaceVariant,
-              }}
-            >
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background:
-                    bridgeStatus === "connected"
-                      ? "#2E7D32"
-                      : bridgeStatus === "connecting"
-                        ? "#F9A825"
-                        : ui.outlineVariant,
-                }}
-              />
-              {lang === "zh" ? "Bridge" : "Bridge"}
-            </span>
-          </div>
-        )}
       </div>
 
       <AnimatePresence>

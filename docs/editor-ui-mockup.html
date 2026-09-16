@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Prism 编辑器 UI 改造参考</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #EDEDF2;
+    color: #111114;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .hint {
+    padding: 12px 20px;
+    font-size: 12px;
+    color: #6B6B76;
+    background: #F7F7F9;
+    border-bottom: 1px solid #E5E5EA;
+  }
+  .app {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 42px);
+    background: #F0F0F4;
+  }
+
+  /* —— 顶栏一条 —— */
+  .topbar {
+    height: 48px;
+    background: #fff;
+    border-bottom: 1px solid #E5E5EA;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .top-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .logo {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: #5B4CD8; color: #fff;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .chip {
+    height: 28px; padding: 0 10px; border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid #E5E5EA; background: #fff; color: #111114;
+    cursor: pointer;
+  }
+  .chip.ghost { border-color: transparent; background: transparent; color: #6B6B76; }
+  .chip.on { background: #EEE9FB; border-color: #C4B5F5; color: #3E2BBF; }
+  .dot { width: 7px; height: 7px; border-radius: 4px; background: #12B76A; }
+  .sep { width: 1px; height: 16px; background: #E5E5EA; }
+  .top-center {
+    flex: 1; display: flex; justify-content: center; gap: 6px; align-items: center;
+  }
+  .top-right { display: flex; align-items: center; gap: 6px; }
+  .iconbtn {
+    width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent;
+    color: #6B6B76; cursor: pointer; display: grid; place-items: center;
+    font-size: 14px;
+  }
+  .iconbtn.on { background: #EEE9FB; color: #3E2BBF; }
+  .grp {
+    display: flex; align-items: center; gap: 2px;
+    background: #F5F5F7; border-radius: 8px; padding: 2px;
+  }
+
+  /* —— 主体 —— */
+  .main { flex: 1; display: flex; min-height: 0; }
+
+  .rail {
+    width: 48px; background: #fff; border-right: 1px solid #E5E5EA;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0; gap: 4px; flex-shrink: 0;
+  }
+  .rail .iconbtn { width: 32px; height: 32px; border-radius: 8px; font-size: 15px; }
+  .rail .iconbtn.on { background: #5B4CD8; color: #fff; }
+
+  .left {
+    width: 280px; background: #fff; border-right: 1px solid #E5E5EA;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .ph {
+    height: 44px; padding: 0 14px; display: flex; align-items: center;
+    border-bottom: 1px solid #E5E5EA; font-size: 13px; font-weight: 600;
+  }
+  .pb { flex: 1; overflow: auto; padding: 12px; }
+  .search {
+    height: 32px; border-radius: 8px; border: 1px solid #E5E5EA;
+    background: #F5F5F7; display: flex; align-items: center; padding: 0 10px;
+    font-size: 12px; color: #6B6B76; margin-bottom: 14px;
+  }
+  .sec { margin-bottom: 16px; }
+  .sec-t { font-size: 11px; font-weight: 600; color: #6B6B76; margin-bottom: 8px; letter-spacing: 0.02em; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tile {
+    border: 1px solid #E5E5EA; border-radius: 10px; padding: 12px 10px;
+    background: #fff; font-size: 12px; text-align: left;
+  }
+  .tile .ic {
+    width: 28px; height: 28px; border-radius: 8px; background: #F5F5F7;
+    display: grid; place-items: center; margin-bottom: 8px; color: #5B4CD8;
+  }
+  .tile.on { border-color: #C4B5F5; background: #F6F4FF; }
+
+  .canvas-wrap {
+    flex: 1; position: relative; background: #E8E8EE; overflow: hidden;
+    display: grid; place-items: center;
+  }
+  .phones { display: flex; gap: 32px; align-items: flex-start; }
+  .phone-col { display: flex; flex-direction: column; gap: 8px; }
+  .phone-meta { font-size: 12px; color: #6B6B76; font-weight: 600; padding-left: 4px; }
+  .phone {
+    width: 240px; height: 480px; background: #fff; border-radius: 28px;
+    border: 8px solid #1C1B1F; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .p-top { height: 44px; background: #1C1B1F; color: #fff; display: flex; align-items: center; padding: 0 14px; font-size: 13px; gap: 10px; }
+  .p-body { flex: 1; background: #F7F5FB; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .p-card { background: #EADDFF; border-radius: 14px; height: 72px; display: grid; place-items: center; color: #4F378B; }
+  .p-row { background: #fff; border-radius: 12px; height: 44px; border: 1px solid #E5E5EA; }
+  .p-nav { height: 48px; background: #fff; border-top: 1px solid #E5E5EA; display: flex; align-items: center; justify-content: space-around; }
+  .p-nav i { width: 18px; height: 18px; border-radius: 50%; background: #6750A4; opacity: 0.35; }
+  .p-nav i.on { opacity: 1; }
+  .p-btn { height: 36px; background: #6750A4; border-radius: 18px; }
+
+  /* 右侧属性 */
+  .right {
+    width: 300px; background: #fff; border-left: 1px solid #E5E5EA;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11px; color: #6B6B76; margin-bottom: 4px; }
+  .field .box {
+    height: 32px; border: 1px solid #E5E5EA; border-radius: 8px; background: #F5F5F7;
+    display: flex; align-items: center; padding: 0 10px; font-size: 12px;
+  }
+
+  /* 底部：只有两角 */
+  .float-bl, .float-br {
+    position: absolute; bottom: 16px; z-index: 5;
+    background: #fff; border: 1px solid #E5E5EA; border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    height: 36px; display: flex; align-items: center; gap: 4px; padding: 0 6px;
+    font-size: 12px;
+  }
+  .float-bl { left: 16px; }
+  .float-br { right: 16px; }
+
+  .badge {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    background: #111114; color: #fff; font-size: 11px; padding: 6px 12px; border-radius: 8px;
+  }
+
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 16px; font-size: 11px; color: #6B6B76; background: #fff; border-top: 1px solid #E5E5EA;
+  }
+  .legend b { color: #111114; }
+</style>
+</head>
+<body>
+<div class="hint">Prism 编辑器外壳改造参考（非最终像素稿）— 对照：旧版有浮动多堆叠、项目色染工具栏、圆钮过大；新版顶栏一条 + 中性灰阶 + 48px 顶栏与侧栏同高。</div>
+
+<div class="app">
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <div class="top-left">
+      <div class="logo">P</div>
+      <button class="chip">← 项目库</button>
+      <span class="sep"></span>
+      <span class="chip ghost">音乐播放器</span>
+      <span class="chip ghost"><span class="dot"></span> 已保存</span>
+      <span class="chip ghost"><span class="dot"></span> Bridge</span>
+    </div>
+
+    <div class="top-center">
+      <div class="grp">
+        <button class="iconbtn on">V</button>
+        <button class="iconbtn">✋</button>
+      </div>
+      <div class="grp">
+        <button class="iconbtn">＋</button>
+        <button class="iconbtn">▶</button>
+        <button class="iconbtn">↶</button>
+        <button class="iconbtn">↷</button>
+      </div>
+      <button class="chip">整理</button>
+      <button class="chip">提示词</button>
+    </div>
+
+    <div class="top-right">
+      <button class="iconbtn">📱</button>
+      <button class="iconbtn">🖥</button>
+      <span class="sep"></span>
+      <button class="chip on">手机</button>
+      <span class="sep"></span>
+      <button class="iconbtn">⋯</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="rail">
+      <button class="iconbtn on">＋</button>
+      <button class="iconbtn">☰</button>
+      <button class="iconbtn">🎨</button>
+      <button class="iconbtn">◇</button>
+      <button class="iconbtn">T</button>
+      <button class="iconbtn">⟳</button>
+      <div style="flex:1"></div>
+      <button class="iconbtn">✨</button>
+      <button class="iconbtn">⚙</button>
+    </div>
+
+    <div class="left">
+      <div class="ph">组件</div>
+      <div class="pb">
+        <div class="search">搜索组件…</div>
+        <div class="sec">
+          <div class="sec-t">操作</div>
+          <div class="tiles">
+            <div class="tile on"><div class="ic">▭</div>按钮</div>
+            <div class="tile"><div class="ic">◎</div>图标按钮</div>
+            <div class="tile"><div class="ic">＋</div>FAB</div>
+            <div class="tile"><div class="ic">▣</div>扩展 FAB</div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-t">导航</div>
+          <div class="tiles">
+            <div class="tile"><div class="ic">▤</div>顶栏</div>
+            <div class="tile"><div class="ic">▥</div>底导</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <div class="badge">编辑器外壳 ≠ 项目主题（灰阶固定）</div>
+      <div class="phones">
+        <div class="phone-col">
+          <div class="phone-meta">发现</div>
+          <div class="phone">
+            <div class="p-top">☰ 发现音乐</div>
+            <div class="p-body">
+              <div class="p-card">推荐</div>
+              <div class="p-row"></div>
+              <div class="p-row"></div>
+              <div class="p-row"></div>
+            </div>
+            <div class="p-nav"><i class="on"></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="phone-col">
+          <div class="phone-meta">正在播放</div>
+          <div class="phone">
+            <div class="p-top">‹ 正在播放</div>
+            <div class="p-body">
+              <div class="p-card" style="height:100px">封面</div>
+              <div style="font-size:13px;font-weight:600">夜色微光</div>
+              <div style="font-size:11px;color:#6B6B76">Luna · 星河</div>
+              <div class="p-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="float-bl">✨ AI · 生成</div>
+      <div class="float-br">73% − ＋ ⛶</div>
+    </div>
+
+    <div class="right">
+      <div class="ph">属性</div>
+      <div class="pb">
+        <div class="field"><label>类型</label><div class="box">按钮 · filled</div></div>
+        <div class="field"><label>文字</label><div class="box">暂停</div></div>
+        <div class="field"><label>图标</label><div class="box">pause</div></div>
+        <div class="field"><label>宽度</label><div class="box">96</div></div>
+        <div class="field"><label>主题角色</label><div class="box">primary</div></div>
+        <p style="font-size:11px;color:#6B6B76;line-height:1.5">右栏可滚；选中部件才出现。项目色仅影响画布内组件。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <span><b>48px</b> 顶栏与左右栏标题同高</span>
+  <span><b>灰阶外壳</b> #F0F0F4 / #FFF / #E5E5EA</span>
+  <span><b>按钮 8px</b> 非胶囊</span>
+  <span><b>底部仅两角</b> AI 左 / 缩放右，中间不堆</span>
+  <span><b>选中色</b> 仅 #5B4CD8 点缀，不跟项目变粉</span>
+</div>
+</body>
+</html>

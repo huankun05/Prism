@@ -2,7 +2,6 @@ import { DEFAULT_THEME, Palette, paletteOf } from "./tokens";
 
 /** Editor chrome tokens — never follow the project document theme. */
 export const CHROME = {
-  /** base grid */
   unit: 4,
   space1: 4,
   space2: 8,
@@ -11,16 +10,15 @@ export const CHROME = {
   space5: 20,
   space6: 24,
   radiusSm: 8,
-  radiusMd: 12,
-  radiusLg: 16,
-  radiusXl: 20,
-  /** left rail width */
-  railW: 52,
-  /** minimum content width for left inspector */
+  radiusMd: 10,
+  radiusLg: 12,
+  radiusXl: 16,
+  topBarH: 48,
+  railW: 48,
   panelMin: 260,
-  panelDefault: 300,
-  rightDefault: 320,
-  /** floating chrome z */
+  panelDefault: 280,
+  rightDefault: 300,
+  iconBtn: 28,
   zToolbar: 50,
   zExit: 70,
   zModal: 100,

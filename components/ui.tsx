@@ -12,7 +12,7 @@ export function IconBtn({
   on,
   onClick,
   title,
-  size = 36,
+  size = 32,
   p,
   danger,
   disabled,
@@ -28,6 +28,8 @@ export function IconBtn({
   disabled?: boolean;
   fill?: boolean;
 }) {
+  /* chrome tools use square-ish 8px radius; larger sizes keep pill for canvas-like feel */
+  const radius = size <= 36 ? 8 : size / 2;
   return (
     <button
       onClick={onClick}
@@ -38,15 +40,15 @@ export function IconBtn({
       style={{
         width: size,
         height: size,
-        borderRadius: size / 2,
+        borderRadius: radius,
         border: "none",
-        background: on ? (danger ? p.errorContainer : p.secondaryContainer) : "transparent",
+        background: on ? (danger ? p.errorContainer : "#EEE9FB") : "transparent",
         color: disabled
           ? p.outlineVariant
           : danger
             ? p.error
             : on
-              ? p.onSecondaryContainer
+              ? "#3E2BBF"
               : p.onSurfaceVariant,
         cursor: disabled ? "default" : "pointer",
         display: "grid",
@@ -54,7 +56,7 @@ export function IconBtn({
         flex: "0 0 auto",
       }}
     >
-      <Icon name={icon} size={Math.round(size * 0.58)} fill={fill ?? on} />
+      <Icon name={icon} size={Math.round(size * 0.55)} fill={fill ?? on} />
     </button>
   );
 }

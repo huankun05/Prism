@@ -485,7 +485,10 @@ export default function Editor({
   const aiNoteTimer = useRef<number | null>(null);
   const aiAbortRef = useRef<AbortController | null>(null);
 
+  /** Project / canvas palette — what the design looks like. */
   const p = paletteOf(paletteKey, customPalette, theme);
+  /** Editor chrome palette — stable, independent of the project theme. */
+  const ui = useMemo(() => paletteOf("purple", null, DEFAULT_THEME), []);
   /* corner helpers read the shape scale outside React; keep it current before anything renders */
   setGlobalShape(theme.shape);
 
@@ -747,9 +750,9 @@ export default function Editor({
 
   /* the page background outside the app root follows the scheme, so dark mode has no white edges */
   useEffect(() => {
-    document.body.style.background = p.surface;
-    document.body.style.color = p.onSurface;
-  }, [p.surface, p.onSurface]);
+    document.body.style.background = ui.surface;
+    document.body.style.color = ui.onSurface;
+  }, [ui.surface, ui.onSurface]);
 
   /* in-app browsers size the page behind their own toolbars and may ignore dvh,
      so the measured inner height wins over the CSS height (innerHeight, not the
@@ -3353,7 +3356,7 @@ export default function Editor({
   const canvasBg = frame === "phone" ? p.surfaceContainerLow : "#ffffff";
 
   const panelStyle: React.CSSProperties = {
-    background: p.surface,
+    background: ui.surface,
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
@@ -3385,10 +3388,10 @@ export default function Editor({
         style={{
           display: "flex",
           overflow: "hidden",
-          background: p.surfaceContainer,
+          background: ui.surfaceContainer,
           cursor: resizing ? "col-resize" : undefined,
           userSelect: resizing ? "none" : undefined,
-          ["--sb" as string]: p.outlineVariant,
+          ["--sb" as string]: ui.outlineVariant,
         }}
       >
         {/* hidden measuring layer for text-sized kinds */}
@@ -3511,8 +3514,8 @@ export default function Editor({
           <aside style={{ ...panelStyle, width: leftOpen ? leftW : RAIL_W, flexDirection: "row", transition: "width 200ms cubic-bezier(0.2, 0, 0, 1)" }}>
             {/* dropping a canvas part anywhere on this side deletes it, whichever tab is open */}
             {overBin && (
-              <div style={{ position: "absolute", inset: 0, zIndex: 5, background: "rgba(179,38,30,0.10)", display: "grid", placeItems: "center", pointerEvents: "none", color: p.error }}>
-                <div style={{ width: 72, height: 72, borderRadius: 36, background: p.errorContainer, color: p.onErrorContainer, display: "grid", placeItems: "center", boxShadow: "0 4px 14px rgba(0,0,0,0.14)" }}>
+              <div style={{ position: "absolute", inset: 0, zIndex: 5, background: "rgba(179,38,30,0.10)", display: "grid", placeItems: "center", pointerEvents: "none", color: ui.error }}>
+                <div style={{ width: 72, height: 72, borderRadius: 36, background: ui.errorContainer, color: ui.onErrorContainer, display: "grid", placeItems: "center", boxShadow: "0 4px 14px rgba(0,0,0,0.14)" }}>
                   <Icon name="delete" size={34} />
                 </div>
               </div>
@@ -3532,18 +3535,18 @@ export default function Editor({
                 alignItems: "center",
                 gap: 6,
                 padding: "10px 0",
-                background: p.surfaceContainerLow,
+                background: ui.surfaceContainerLow,
                 cursor: leftOpen ? undefined : "pointer",
               }}
             >
               {!leftOpen && railHover ? (
-                <IconBtn icon="left_panel_open" p={p} on onClick={() => setLeftOpen(true)} title={t("openPanel", lang)} size={40} />
+                <IconBtn icon="left_panel_open" p={ui} onClick={() => setLeftOpen(true)} title={t("openPanel", lang)} size={40} />
               ) : (
                 <div
                   onClick={() => !leftOpen && setLeftOpen(true)}
                   style={{ width: 40, height: 40, display: "grid", placeItems: "center", cursor: leftOpen ? "default" : "pointer" }}
                 >
-                  <Logo size={32} color={p.primary} glyph={p.onPrimary} />
+                  <Logo size={32} color={ui.primary} glyph={ui.onPrimary} />
                 </div>
               )}
               <div style={{ height: 6 }} />
@@ -3551,7 +3554,7 @@ export default function Editor({
                 <div key={tab.key} style={{ marginTop: i === 2 || i === 6 ? 10 : 0 }}>
                   <IconBtn
                     icon={tab.icon}
-                    p={p}
+                    p={ui}
                     on={leftOpen && leftTab === tab.key}
                     onClick={() => {
                       setLeftTab(tab.key);
@@ -3563,8 +3566,8 @@ export default function Editor({
                 </div>
               ))}
               <div style={{ flex: 1 }} onClick={() => !leftOpen && setLeftOpen(true)} />
-              <LangMenu p={p} onLang={changeLanguage} side="right" size={44} />
-              <GitHubLink p={p} size={44} />
+              <LangMenu p={ui} onLang={changeLanguage} side="right" size={44} />
+              <GitHubLink p={ui} size={44} />
             </div>
             {leftOpen && (
             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
@@ -3580,7 +3583,7 @@ export default function Editor({
                   style={{
                     fontWeight: 700,
                     fontSize: 14,
-                    color: p.onSurface,
+                    color: ui.onSurface,
                     flex: 1,
                   }}
                 >
@@ -3588,15 +3591,15 @@ export default function Editor({
                 </span>
                 <IconBtn
                   icon="left_panel_close"
-                  p={p}
+                  p={ui}
                   onClick={() => setLeftOpen(false)}
                   title={t("closePanel", lang)}
                 />
               </div>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}>
                 {leftTab === "parts" ? (
                   <PartsPalette
-                    palette={p}
+                    palette={ui}
                     favorites={favorites}
                     onToggleFavorite={(k) =>
                       setFavorites((f) =>
@@ -3624,11 +3627,11 @@ export default function Editor({
                             }}
                             style={{
                               flex: 1,
-                              border: designPack === pack.id ? `2px solid ${p.primary}` : `1px solid ${p.outlineVariant}`,
+                              border: designPack === pack.id ? `2px solid ${ui.primary}` : `1px solid ${ui.outlineVariant}`,
                               borderRadius: 12,
                               padding: "8px 6px",
-                              background: designPack === pack.id ? p.secondaryContainer : p.surfaceContainerLow,
-                              color: designPack === pack.id ? p.onSecondaryContainer : p.onSurfaceVariant,
+                              background: designPack === pack.id ? ui.secondaryContainer : ui.surfaceContainerLow,
+                              color: designPack === pack.id ? ui.onSecondaryContainer : ui.onSurfaceVariant,
                               cursor: "pointer",
                               fontSize: 11,
                               fontWeight: 600,
@@ -3642,7 +3645,7 @@ export default function Editor({
                       <button
                         type="button"
                         onClick={() => {
-                          const css = exportTokenCss(p, designPack);
+                          const css = exportTokenCss(paletteOf(paletteKey, customPalette, theme), designPack);
                           const blob = new Blob([css], { type: "text/css" });
                           const a = document.createElement("a");
                           a.href = URL.createObjectURL(blob);
@@ -3654,9 +3657,9 @@ export default function Editor({
                         style={{
                           marginTop: 8,
                           width: "100%",
-                          border: `1px solid ${p.outlineVariant}`,
+                          border: `1px solid ${ui.outlineVariant}`,
                           background: "transparent",
-                          color: p.onSurfaceVariant,
+                          color: ui.onSurfaceVariant,
                           borderRadius: 10,
                           padding: "6px 10px",
                           fontSize: 11,
@@ -3667,7 +3670,7 @@ export default function Editor({
                       </button>
                     </div>
                     <ColorPanel
-                      p={p}
+                      p={ui}
                       paletteKey={paletteKey}
                       onPalette={setPaletteKey}
                       custom={customPalette}
@@ -3679,7 +3682,7 @@ export default function Editor({
                     />
                     {primaryId && (
                       <IconBrowser
-                        p={p}
+                        p={ui}
                         onPick={(key) => {
                           patchSelected({ icon: key });
                           showToast(lang === "zh" ? `图标已设为 ${key}` : `Icon → ${key}`, 1400, "emoji_symbols");
@@ -3688,15 +3691,15 @@ export default function Editor({
                     )}
                   </div>
                 ) : leftTab === "shape" ? (
-                  <ShapePanel p={p} theme={theme} onChange={patchTheme} />
+                  <ShapePanel p={ui} theme={theme} onChange={patchTheme} />
                 ) : leftTab === "type" ? (
-                  <TypePanel p={p} theme={theme} onChange={patchTheme} />
+                  <TypePanel p={ui} theme={theme} onChange={patchTheme} />
                 ) : leftTab === "motion" ? (
-                  <MotionPanel p={p} theme={theme} onChange={patchTheme} />
+                  <MotionPanel p={ui} theme={theme} onChange={patchTheme} />
                 ) : leftTab === "ai" ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 0, flex: 1 }}>
                     <AiStudio
-                      p={p}
+                      p={ui}
                       settings={aiSettings}
                       busy={draftBusy}
                       styleId={aiStyleId}
@@ -3736,7 +3739,7 @@ export default function Editor({
                       onDraft={(idea, sid, device) => void startDraft(idea, sid, device)}
                     />
                     <PersonalStylePanel
-                      p={p}
+                      p={ui}
                       currentDoc={() => ({ paletteKey, theme, title })}
                       onApply={(style) => {
                         setPaletteKey(style.paletteKey);
@@ -3752,7 +3755,7 @@ export default function Editor({
                         {lang === "zh" ? "模型设置" : "Model settings"}
                       </summary>
                       <div style={{ marginTop: 8 }}>
-                        <AiPanel p={p} settings={aiSettings} onSettings={updateAiSettings} />
+                        <AiPanel p={ui} settings={aiSettings} onSettings={updateAiSettings} />
                       </div>
                     </details>
                   </div>
@@ -4101,7 +4104,7 @@ export default function Editor({
             </div>
           )}
           <Toolbar
-            p={p}
+            p={ui}
             mode={mode}
             onMode={setMode}
             frame={frame}
@@ -4153,7 +4156,7 @@ export default function Editor({
                 textAlign: "center",
                 fontSize: 11,
                 lineHeight: 1.4,
-                color: p.onSurfaceVariant,
+                color: ui.onSurfaceVariant,
                 pointerEvents: "none",
                 zIndex: 40,
               }}
@@ -4176,8 +4179,8 @@ export default function Editor({
                 height: 64,
                 borderRadius: 20,
                 border: "none",
-                background: p.primary,
-                color: p.onPrimary,
+                background: ui.primary,
+                color: ui.onPrimary,
                 cursor: "pointer",
                 display: "grid",
                 placeItems: "center",
@@ -4392,7 +4395,7 @@ export default function Editor({
           icon="file_open"
           title={t("replaceProjectTitle", lang)}
           body={t("replaceProject", lang)}
-          p={p}
+          p={ui}
           onCancel={() => setPendingImport(null)}
           onConfirm={() => {
             if (pendingImport) importDoc(pendingImport);
@@ -4401,7 +4404,7 @@ export default function Editor({
         />
 
         <ShareDialog
-          p={p}
+          p={ui}
           doc={doc}
           aiReady={aiReady}
           idea={ideaText}
@@ -4421,7 +4424,7 @@ export default function Editor({
           open={confirmClear}
           title={t("clearAllTitle", lang)}
           body={t("clearAllBody", lang)}
-          p={p}
+          p={ui}
           onCancel={() => setConfirmClear(false)}
           onConfirm={clearAll}
         />
@@ -4449,8 +4452,8 @@ export default function Editor({
                 padding: "0 14px",
                 borderRadius: 18,
                 border: "none",
-                background: p.surfaceContainerLow,
-                color: p.onSurfaceVariant,
+                background: ui.surfaceContainerLow,
+                color: ui.onSurfaceVariant,
                 boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
                 cursor: "pointer",
                 fontSize: 13,
@@ -4467,9 +4470,9 @@ export default function Editor({
               aria-live="polite"
               style={{
                 fontSize: 12,
-                color: saveStatus === "error" ? p.error : p.onSurfaceVariant,
+                color: saveStatus === "error" ? ui.error : ui.onSurfaceVariant,
                 opacity: saveStatus === "idle" ? 0.5 : 0.85,
-                background: p.surfaceContainerLow,
+                background: ui.surfaceContainerLow,
                 borderRadius: 12,
                 padding: "6px 10px",
               }}
@@ -4503,10 +4506,10 @@ export default function Editor({
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                background: p.surfaceContainerLow,
+                background: ui.surfaceContainerLow,
                 borderRadius: 12,
                 padding: "6px 10px",
-                color: bridgeStatus === "connected" ? p.primary : p.onSurfaceVariant,
+                color: bridgeStatus === "connected" ? ui.primary : ui.onSurfaceVariant,
               }}
             >
               <span
@@ -4519,7 +4522,7 @@ export default function Editor({
                       ? "#2E7D32"
                       : bridgeStatus === "connecting"
                         ? "#F9A825"
-                        : p.outlineVariant,
+                        : ui.outlineVariant,
                 }}
               />
               {lang === "zh" ? "Bridge" : "Bridge"}

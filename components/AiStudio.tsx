@@ -225,7 +225,19 @@ export function AiStudio({
   });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 0 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        minHeight: 0,
+        height: "100%",
+        overflowY: "auto",
+        overflowX: "hidden",
+        paddingRight: 2,
+        boxSizing: "border-box",
+      }}
+    >
       {modeInfo && (
         <div
           style={{
@@ -341,7 +353,16 @@ export function AiStudio({
           </div>
         </div>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0] ?? null; e.target.value = ""; void onImportFile(f); }} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 6,
+            maxHeight: 168,
+            overflowY: "auto",
+            paddingRight: 2,
+          }}
+        >
           {presets.map((s) => {
             const on = s.id === styleId;
             const custom = "source" in s && s.source === "custom";
@@ -440,7 +461,7 @@ export function AiStudio({
       <div style={{ height: 1, background: p.outlineVariant, opacity: 0.6 }} />
 
       <div style={{ fontSize: 13, fontWeight: 600 }}>{zh ? "和 AI 说想法（整页）" : "Chat AI (whole page)"}</div>
-      <div ref={listRef} style={{ minHeight: 80, maxHeight: 140, overflow: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div ref={listRef} style={{ minHeight: 64, maxHeight: 100, overflow: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
         {messages.length === 0 ? (
           <p style={{ margin: 0, fontSize: 12, opacity: 0.55, lineHeight: 1.5 }}>
             {zh ? "选风格与设备后生成整页；或先选中部件用「区域修改」。" : "Pick style + device for a full page; or select a part for region edit."}
